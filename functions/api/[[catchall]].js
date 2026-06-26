@@ -65,7 +65,17 @@ export async function onRequest(context) {
 async function initDB(env) {
   const DB = env.DB;
   const inited = await DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").first();
-  if (inited) return;
+  if (inited) {
+    // Ensure admin user exists even if tables were already created
+    const adminExists = await DB.prepare("SELECT id FROM users WHERE username = ?").bind('ManitSolutions').first();
+    if (!adminExists) {
+      const hash = await hashPassword('Manit@2407');
+      await DB.prepare(
+        "INSERT OR IGNORE INTO users (username, password_hash, name, role) VALUES (?, ?, ?, ?)"
+      ).bind('ManitSolutions', hash, 'MANIT Administrator', 'admin').run();
+    }
+    return;
+  }
 
   // Create tables
   await DB.exec(`
