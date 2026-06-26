@@ -244,8 +244,8 @@ tr:last-child td { border-bottom: none; }
     <div class="nav-item" data-page="attendance" onclick="showPage('attendance')"><span class="nav-icon">📋</span>Attendance</div>
     <div class="nav-item" data-page="salary" onclick="showPage('salary')"><span class="nav-icon">💰</span>Salary</div>
     <div class="nav-item" data-page="payslip" onclick="showPage('payslip')"><span class="nav-icon">📄</span>Payslips</div>
-    <div class="nav-item" data-page="users" onclick="showPage('users')"><span class="nav-icon">🔐</span>Users</div>
-    <div class="nav-item" data-page="settings" onclick="showPage('settings')"><span class="nav-icon">⚙️</span>Settings</div>
+    <div class="nav-item" data-page="users" id="nav-users" onclick="showPage('users')"><span class="nav-icon">🔐</span>Users</div>
+    <div class="nav-item" data-page="settings" id="nav-settings" onclick="showPage('settings')"><span class="nav-icon">⚙️</span>Settings</div>
   </nav>
   <div class="sidebar-footer">
     <div class="user-info">
@@ -301,9 +301,18 @@ tr:last-child td { border-bottom: none; }
 
     <!-- ══ PAGE: DEPARTMENTS ══ -->
     <div class="page" id="page-departments">
-      <div class="card">
-        <div class="card-header"><h3>Departments</h3><div class="actions"><button class="btn btn-primary" onclick="openAddDeptModal()">+ Add Department</button></div></div>
-        <table><thead><tr><th>ID</th><th>Name</th><th>Employees</th><th>Action</th></tr></thead><tbody id="deptTableBody"></tbody></table>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><h3>Departments</h3><div class="actions"><button class="btn btn-primary" onclick="openAddDeptModal()">+ Add</button></div></div>
+          <table><thead><tr><th>ID</th><th>Name</th><th>Employees</th><th>Action</th></tr></thead><tbody id="deptTableBody"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 id="subdeptHeader">Sub-Departments</h3><div class="actions">
+            <select id="subdeptDeptFilter" onchange="renderSubDepartments()" style="padding:6px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:11px;font-family:inherit;"></select>
+            <button class="btn btn-primary" onclick="openAddSubDeptModal()">+ Add</button>
+          </div></div>
+          <table><thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Action</th></tr></thead><tbody id="subdeptTableBody"></tbody></table>
+        </div>
       </div>
     </div>
 
@@ -575,16 +584,38 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
+<!-- ═══ MODAL: SUB-DEPARTMENT ═══ -->
+<div class="modal-overlay" id="modal-subdept">
+  <div class="modal" style="max-width:400px;">
+    <h3 id="subdeptModalTitle">Add Sub-Department</h3>
+    <input type="hidden" id="subdeptEditId" />
+    <div class="form-grid" style="grid-template-columns:1fr;">
+      <div class="form-group"><label>Department</label><select id="subdeptDeptSelect"></select></div>
+      <div class="form-group"><label>Sub-Department Name</label><input type="text" id="subdeptName" placeholder="e.g. Software" /></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('subdept')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSubDepartment()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL: USER ═══ -->
 <div class="modal-overlay" id="modal-user">
-  <div class="modal" style="max-width:400px;">
+  <div class="modal" style="max-width:500px;">
     <h3 id="userModalTitle">Add User</h3>
     <input type="hidden" id="userEditId" />
     <div class="form-grid" style="grid-template-columns:1fr;">
       <div class="form-group"><label>Username</label><input type="text" id="userUsername" placeholder="username" /></div>
       <div class="form-group"><label>Password</label><input type="text" id="userPassword" placeholder="password" /></div>
       <div class="form-group"><label>Display Name</label><input type="text" id="userDisplayName" placeholder="Full name" /></div>
-      <div class="form-group"><label>Role</label><select id="userRole"><option value="admin">Admin</option><option value="user">User</option></select></div>
+      <div class="form-group"><label>Role</label><select id="userRole" onchange="toggleUserPermissions()"><option value="admin">Admin (full access)</option><option value="user">User (limited access)</option></select></div>
+    </div>
+    <div id="userPermissionsSection" style="border:1px solid #E2E8F0;border-radius:10px;padding:14px;margin-bottom:10px;background:#FAFBFC;">
+      <h4 style="font-size:12px;font-weight:700;margin-bottom:8px;color:#0F1B3D;">🔐 Department Access</h4>
+      <div id="userDeptCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+      <h4 style="font-size:12px;font-weight:700;margin-bottom:8px;color:#0F1B3D;">🔐 Sub-Department Access</h4>
+      <div id="userSubdeptCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
     </div>
     <div class="form-actions">
       <button class="btn btn-secondary" onclick="closeModal('user')">Cancel</button>
@@ -639,7 +670,7 @@ function seedData() {
   ];
   STORE.set('subdepartments', subdepts);
   STORE.set('users', [
-    { id: uid(), username: 'admin', password: 'admin123', name: 'Administrator', role: 'admin' },
+    { id: uid(), username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] },
   ]);
   STORE.set('settings', { companyName: 'MANIT SOLUTIONS', address: 'India', phone: '+91-XXXXXXXXXX', email: 'info@manitsolutions.com', pfPercent: 12, esicPercent: 0.75 });
   const now = todayStr();
@@ -669,6 +700,19 @@ function requireAuth() {
     localStorage.getItem('pw_user_role') === 'admin' ? 'Administrator' : 'User';
   document.getElementById('sidebarAvatar').textContent =
     (localStorage.getItem('pw_user_name') || 'A')[0];
+  // Hide admin-only tabs for non-admin users
+  const isAdm = localStorage.getItem('pw_user_role') === 'admin';
+  const navUsers = document.getElementById('nav-users');
+  const navSettings = document.getElementById('nav-settings');
+  if (navUsers) navUsers.style.display = isAdm ? 'flex' : 'none';
+  if (navSettings) navSettings.style.display = isAdm ? 'flex' : 'none';
+  // Redirect non-admin from admin pages
+  if (!isAdm) {
+    const page = document.querySelector('.page.active');
+    if (page && (page.id === 'page-users' || page.id === 'page-settings')) {
+      showPage('dashboard');
+    }
+  }
   return true;
 }
 function handleLogout() {
@@ -692,7 +736,7 @@ function showPage(name) {
   // Refresh on show
   if (name === 'dashboard') renderDashboard();
   else if (name === 'employees') { populateDeptFilter(); renderEmployees(); }
-  else if (name === 'departments') renderDepartments();
+  else if (name === 'departments') { renderDepartments(); renderSubDepartments(); }
   else if (name === 'attendance') { renderAttendance(); renderMonthlyAttendance(); renderDaywiseAttendance(); }
   else if (name === 'salary') renderSalary();
   else if (name === 'payslip') renderPayslipList();
@@ -741,7 +785,7 @@ function populateMonthYear(monthId, yearId, selectedM, selectedY) {
 // DASHBOARD
 // ═══════════════════════════════════════════════════════════════════
 function renderDashboard() {
-  const emps = STORE.get('employees', []);
+  const emps = filterEmpsByPerm();
   const att = STORE.get('attendance', []);
   const today = todayStr();
   const todayAtt = att.filter(a => a.date === today);
@@ -789,7 +833,7 @@ function populateDeptSelect(id) {
 }
 
 function renderEmployees(filter) {
-  const emps = STORE.get('employees', []);
+  const emps = filterEmpsByPerm();
   const deptF = document.getElementById('empDeptFilter');
   const deptId = deptF ? deptF.value : '';
   let list = emps;
@@ -1195,8 +1239,66 @@ function deleteDepartment(id) {
   let depts = STORE.get('departments', []);
   depts = depts.filter(d => d.id !== id);
   STORE.set('departments', depts);
-  renderDepartments();
+  // Also delete sub-departments
+  let subdepts = STORE.get('subdepartments', []);
+  subdepts = subdepts.filter(sd => sd.departmentId !== id);
+  STORE.set('subdepartments', subdepts);
+  renderDepartments(); renderSubDepartments();
   showToast('🗑️ Department deleted');
+}
+
+// ─── SUB-DEPARTMENTS ────────────────────────
+function renderSubDepartments() {
+  const filterDeptId = document.getElementById('subdeptDeptFilter')?.value;
+  const subdepts = STORE.get('subdepartments', []);
+  let list = subdepts;
+  if (filterDeptId) list = list.filter(sd => sd.departmentId == filterDeptId);
+  
+  document.getElementById('subdeptTableBody').innerHTML = list.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;padding:24px;color:#5A6A7A;">No sub-departments</td></tr>'
+    : list.map(sd => `<tr><td>${sd.id}</td><td><strong>${esc(sd.name)}</strong></td><td>${esc(getDeptName(sd.departmentId))}</td><td><button class="btn btn-xs btn-danger" onclick="deleteSubDepartment(${sd.id})">🗑️</button></td></tr>`).join('');
+  
+  // Populate filter
+  const filter = document.getElementById('subdeptDeptFilter');
+  if (filter) {
+    const depts = STORE.get('departments', []);
+    const currentVal = filter.value;
+    filter.innerHTML = '<option value="">All Depts</option>' + depts.map(d => `<option value="${d.id}" ${d.id==currentVal?'selected':''}>${esc(d.name)}</option>`).join('');
+  }
+}
+
+function openAddSubDeptModal() {
+  document.getElementById('subdeptModalTitle').textContent = 'Add Sub-Department';
+  document.getElementById('subdeptEditId').value = '';
+  document.getElementById('subdeptName').value = '';
+  const sel = document.getElementById('subdeptDeptSelect');
+  const depts = STORE.get('departments', []);
+  sel.innerHTML = depts.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+  openModal('subdept');
+}
+
+function saveSubDepartment() {
+  const name = document.getElementById('subdeptName').value.trim();
+  const deptId = parseInt(document.getElementById('subdeptDeptSelect').value);
+  if (!name || !deptId) { showToast('Fill all fields', true); return; }
+  let subdepts = STORE.get('subdepartments', []);
+  if (subdepts.find(sd => sd.name.toLowerCase() === name.toLowerCase() && sd.departmentId === deptId)) {
+    showToast('Name already exists in this department', true); return;
+  }
+  subdepts.push({ id: uid(), name, departmentId: deptId });
+  STORE.set('subdepartments', subdepts);
+  closeModal('subdept');
+  renderSubDepartments();
+  showToast('✅ Sub-department added');
+}
+
+function deleteSubDepartment(id) {
+  if (!confirm('Delete this sub-department?')) return;
+  let subdepts = STORE.get('subdepartments', []);
+  subdepts = subdepts.filter(sd => sd.id !== id);
+  STORE.set('subdepartments', subdepts);
+  renderSubDepartments();
+  showToast('🗑️ Sub-department deleted');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1222,7 +1324,7 @@ function calcSalary(emp) {
 // ═══════════════════════════════════════════════════════════════════
 function renderAttendance() {
   const date = document.getElementById('attendanceDate').value || todayStr();
-  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
   const att = STORE.get('attendance', []);
   
   document.getElementById('attendanceTableBody').innerHTML = emps.length === 0
@@ -1270,7 +1372,7 @@ function markAttendance(empId, status) {
 
 function markAllPresent() {
   const date = document.getElementById('attendanceDate').value || todayStr();
-  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
   let att = STORE.get('attendance', []);
   const now = new Date(); const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   emps.forEach(e => {
@@ -1287,7 +1389,7 @@ function markAllPresent() {
 function renderMonthlyAttendance() {
   const month = parseInt(document.getElementById('attMonth').value);
   const year = parseInt(document.getElementById('attYear').value);
-  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
   const att = STORE.get('attendance', []).filter(a => {
     const d = new Date(a.date);
     return d.getMonth() === month && d.getFullYear() === year;
@@ -1355,7 +1457,7 @@ function renderDaywiseAttendance() {
   const month = parseInt(document.getElementById('dwMonth').value);
   const year = parseInt(document.getElementById('dwYear').value);
   const days = daysInMonth(month, year);
-  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
   const container = document.getElementById('daywiseGridContainer');
   if (!emps.length) {
     container.innerHTML = '<div style="padding:20px;text-align:center;color:#5A6A7A;">No active employees</div>';
@@ -1442,7 +1544,7 @@ function renderSalary() {
   const month = parseInt(document.getElementById('salMonth').value);
   const year = parseInt(document.getElementById('salYear').value);
   let salary = STORE.get('salary', []).filter(s => s.month === month && s.year === year);
-  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
   
   const totalAmt = salary.reduce((s, r) => s + r.net, 0);
   const paidAmt = salary.filter(s => s.paid).reduce((s, r) => s + r.net, 0);
@@ -1452,7 +1554,7 @@ function renderSalary() {
   document.getElementById('sTotalPaid').textContent = '₹' + paidAmt.toLocaleString('en-IN');
   document.getElementById('sTotalUnpaid').textContent = '₹' + unpaidAmt.toLocaleString('en-IN');
   document.getElementById('sTotalEmp').textContent = salary.length;
-  document.getElementById('sTotalSub').textContent = 'of ' + emps.length + ' active employees';
+  document.getElementById('sTotalSub').textContent = 'of ' + STORE.get('employees', []).filter(e => e.status === 'Active').length + ' active employees (filtered: ' + emps.length + ')';
   
   document.getElementById('salaryTableBody').innerHTML = salary.length === 0
     ? '<tr><td colspan="11" style="text-align:center;padding:24px;color:#5A6A7A;">Click "Generate" for ' + MONTHS[month] + ' ' + year + '</td></tr>'
@@ -1477,7 +1579,7 @@ function renderSalary() {
 function generateSalary() {
   const month = parseInt(document.getElementById('salMonth').value);
   const year = parseInt(document.getElementById('salYear').value);
-  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
   let salary = STORE.get('salary', []);
   
   // Remove existing for this month
@@ -1615,7 +1717,71 @@ function viewPayslip(empId, month, year) {
 // ═══════════════════════════════════════════════════════════════════
 // USERS
 // ═══════════════════════════════════════════════════════════════════
+
+// ─── PERMISSION HELPERS ─────────────────────
+function getLoggedInUser() {
+  const username = localStorage.getItem('pw_user');
+  const users = STORE.get('users', []);
+  return users.find(u => u.username === username) || null;
+}
+
+function isAdmin() { return localStorage.getItem('pw_user_role') === 'admin'; }
+
+function filterEmpsByPerm() {
+  const emps = STORE.get('employees', []);
+  if (isAdmin()) return emps;
+  const user = getLoggedInUser();
+  if (!user || !user.permittedDepts || user.permittedDepts.length === 0) return [];
+  return emps.filter(e => user.permittedDepts.includes(e.departmentId));
+}
+
+// ─── TOGGLE PERMISSIONS ─────────────────────
+function toggleUserPermissions() {
+  document.getElementById('userPermissionsSection').style.display =
+    document.getElementById('userRole').value === 'admin' ? 'none' : 'block';
+}
+
+function populateUserPermCheckboxes(selectedDepts, selectedSubdepts) {
+  const depts = STORE.get('departments', []);
+  const subdepts = STORE.get('subdepartments', []);
+  const deptDiv = document.getElementById('userDeptCheckboxes');
+  deptDiv.innerHTML = depts.map(d => {
+    const checked = selectedDepts && selectedDepts.includes(d.id) ? 'checked' : '';
+    return `<label style="font-size:12px;display:flex;align-items:center;gap:4px;padding:4px 8px;background:#fff;border:1px solid #E2E8F0;border-radius:6px;cursor:pointer;"><input type="checkbox" class="user-dept-cb" value="${d.id}" ${checked} onchange="onUserDeptChange()" /> ${esc(d.name)}</label>`;
+  }).join('');
+  const subDiv = document.getElementById('userSubdeptCheckboxes');
+  subDiv.innerHTML = subdepts.map(sd => {
+    const checked = selectedSubdepts && selectedSubdepts.includes(sd.id) ? 'checked' : '';
+    return `<label style="font-size:12px;display:flex;align-items:center;gap:4px;padding:4px 8px;background:#fff;border:1px solid #E2E8F0;border-radius:6px;cursor:pointer;"><input type="checkbox" class="user-subdept-cb" value="${sd.id}" ${checked} /> ${esc(sd.name)} (${esc(getDeptName(sd.departmentId))})</label>`;
+  }).join('');
+  onUserDeptChange();
+}
+
+function onUserDeptChange() {
+  const checkedDepts = Array.from(document.querySelectorAll('.user-dept-cb:checked')).map(cb => parseInt(cb.value));
+  document.querySelectorAll('.user-subdept-cb').forEach(cb => {
+    const sdId = parseInt(cb.value);
+    const subdepts = STORE.get('subdepartments', []);
+    const sd = subdepts.find(x => x.id === sdId);
+    const label = cb.closest('label');
+    if (sd && checkedDepts.length > 0 && !checkedDepts.includes(sd.departmentId)) {
+      label.style.display = 'none';
+    } else { label.style.display = 'flex'; }
+  });
+}
+
+function getSelectedPerms() {
+  return {
+    depts: Array.from(document.querySelectorAll('.user-dept-cb:checked')).map(cb => parseInt(cb.value)),
+    subdepts: Array.from(document.querySelectorAll('.user-subdept-cb:checked')).map(cb => parseInt(cb.value)),
+  };
+}
+
 function renderUsers() {
+  if (!isAdmin()) {
+    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#5A6A7A;">Access restricted to Administrators</td></tr>';
+    return;
+  }
   const users = STORE.get('users', []);
   const currentUser = localStorage.getItem('pw_user');
   document.getElementById('usersTableBody').innerHTML = users.map(u =>
@@ -1624,7 +1790,7 @@ function renderUsers() {
       <td>${esc(u.name)}</td>
       <td><span class="badge ${u.role==='admin'?'badge-blue':'badge-gray'}">${esc(u.role)}</span></td>
       <td>
-        ${u.username === 'admin' ? '<span style="color:#5A6A7A;font-size:11px;">(built-in)</span>'
+        ${u.username === 'ManitSolutions' ? '<span style="color:#5A6A7A;font-size:11px;">(built-in)</span>'
           : '<button class="btn btn-xs btn-secondary" onclick="editUser('+u.id+')">✏️</button> ' +
             '<button class="btn btn-xs btn-danger" onclick="deleteUser('+u.id+')">🗑️</button>'}
       </td>
@@ -1639,6 +1805,8 @@ function openAddUserModal() {
   document.getElementById('userPassword').value = '';
   document.getElementById('userDisplayName').value = '';
   document.getElementById('userRole').value = 'user';
+  toggleUserPermissions();
+  populateUserPermCheckboxes([], []);
   openModal('user');
 }
 
@@ -1651,6 +1819,8 @@ function editUser(id) {
   document.getElementById('userPassword').value = u.password;
   document.getElementById('userDisplayName').value = u.name;
   document.getElementById('userRole').value = u.role;
+  toggleUserPermissions();
+  populateUserPermCheckboxes(u.permittedDepts || [], u.permittedSubDepts || []);
   openModal('user');
 }
 
@@ -1659,16 +1829,18 @@ function saveUser() {
   const username = document.getElementById('userUsername').value.trim();
   const password = document.getElementById('userPassword').value.trim();
   const name = document.getElementById('userDisplayName').value.trim();
+  const role = document.getElementById('userRole').value;
   if (!username || !password || !name) { showToast('Fill all fields', true); return; }
+  const perms = role === 'admin' ? { permittedDepts: [], permittedSubDepts: [] } : getSelectedPerms();
   let users = STORE.get('users', []);
   if (editId) {
     const idx = users.findIndex(u => u.id == editId);
-    if (idx >= 0) { users[idx] = { ...users[idx], username, password, name, role: document.getElementById('userRole').value }; }
+    if (idx >= 0) { users[idx] = { ...users[idx], username, password, name, role, ...perms }; }
     STORE.set('users', users);
     showToast('✅ User updated');
   } else {
     if (users.find(u => u.username === username)) { showToast('Username exists', true); return; }
-    users.push({ id: uid(), username, password, name, role: document.getElementById('userRole').value });
+    users.push({ id: uid(), username, password, name, role, ...perms });
     STORE.set('users', users);
     showToast('✅ User added');
   }
@@ -1680,7 +1852,7 @@ function deleteUser(id) {
   if (!confirm('Delete this user?')) return;
   let users = STORE.get('users', []);
   const u = users.find(x => x.id === id);
-  if (u && u.username === 'admin') { showToast('Cannot delete admin', true); return; }
+  if (u && u.username === 'ManitSolutions') { showToast('Cannot delete main admin', true); return; }
   users = users.filter(u => u.id !== id);
   STORE.set('users', users);
   renderUsers();
