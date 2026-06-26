@@ -685,9 +685,13 @@ function seedData() {
     { id: uid(), name: 'Admin', departmentId: depts[4].id },
   ];
   STORE.set('subdepartments', subdepts);
-  STORE.set('users', [
-    { id: uid(), username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] },
-  ]);
+  // Ensure MANIT Solutions admin user always exists
+  let users = STORE.get('users', []);
+  if (!users.find(u => u.username === 'ManitSolutions')) {
+    users = users.filter(u => u.username === 'ManitSolutions');
+    users.push({ id: uid(), username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] });
+    STORE.set('users', users);
+  }
   STORE.set('settings', { companyName: 'MANIT SOLUTIONS', address: 'India', phone: '+91-XXXXXXXXXX', email: 'info@manitsolutions.com', pfPercent: 12, esicPercent: 0.75 });
   const now = todayStr();
   const emps = [
@@ -702,6 +706,15 @@ function seedData() {
 }
 
 seedData();
+
+// Always ensure MANIT Solutions admin user exists (even if previously seeded with old data)
+(function() {
+  let users = STORE.get('users', []);
+  if (!users.find(u => u.username === 'ManitSolutions')) {
+    users.push({ id: uid(), username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] });
+    STORE.set('users', users);
+  }
+})();
 
 // Helpers
 function getDeptName(id) { const d = STORE.get('departments', []).find(x => x.id === id); return d ? d.name : '—'; }

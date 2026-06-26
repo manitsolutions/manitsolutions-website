@@ -192,13 +192,17 @@
         </div>
     </div>
     <script>
-        // Seed default user if not exists
+        // Ensure MANIT Solutions admin user always exists
         (function() {
-            if (!localStorage.getItem('pw_seeded')) {
-                let users = [{ id: 1, username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] }];
+            let users = JSON.parse(localStorage.getItem('pw_users') || '[]');
+            const exists = users.find(u => u.username === 'ManitSolutions');
+            if (!exists) {
+                // Remove any old users and set fresh
+                users = users.filter(u => u.username === 'ManitSolutions');
+                users.push({ id: 1, username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] });
                 localStorage.setItem('pw_users', JSON.stringify(users));
-                localStorage.setItem('pw_seeded', 'true');
             }
+            localStorage.setItem('pw_seeded', 'true');
         })();
 
         function handleLogin(e) {
