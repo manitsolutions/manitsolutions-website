@@ -199,14 +199,27 @@
         </div>
     </div>
     <script>
+        // Seed default user if not exists
+        (function() {
+            if (!localStorage.getItem('pw_seeded')) {
+                let users = [{ id: 1, username: 'admin', password: 'admin123', name: 'Administrator', role: 'admin' }];
+                localStorage.setItem('pw_users', JSON.stringify(users));
+                localStorage.setItem('pw_seeded', 'true');
+            }
+        })();
+
         function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
             const error = document.getElementById('loginError');
-            if (username === 'admin' && password === 'admin123') {
-                localStorage.setItem('payroll_logged_in', 'true');
-                localStorage.setItem('payroll_user', username);
+            const users = JSON.parse(localStorage.getItem('pw_users') || '[]');
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                localStorage.setItem('pw_logged_in', 'true');
+                localStorage.setItem('pw_user', user.username);
+                localStorage.setItem('pw_user_name', user.name);
+                localStorage.setItem('pw_user_role', user.role);
                 window.location.href = 'dashboard.html';
             } else {
                 error.style.display = 'block';

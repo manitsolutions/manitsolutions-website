@@ -1,775 +1,1209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PAYROLL Dashboard — MANIT SOLUTIONS</title>
-    <link rel="icon" href="assets/favicon.png" type="image/png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: #F7F9FC;
-            color: #1A1A2E;
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* ─── SIDEBAR ──────────────────────────── */
-        .sidebar {
-            width: 260px;
-            background: #0F1B3D;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0; left: 0; bottom: 0;
-            z-index: 100;
-            transition: transform 0.3s;
-        }
-        .sidebar-brand {
-            padding: 24px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .sidebar-brand img { height: 32px; filter: brightness(0) invert(1); }
-        .sidebar-brand span { font-weight: 800; font-size: 16px; }
-        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
-        .sidebar-nav .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            color: rgba(255,255,255,0.6);
-            transition: all 0.2s;
-            margin-bottom: 2px;
-        }
-        .sidebar-nav .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .sidebar-nav .nav-item.active { background: #1A4DFF; color: #fff; }
-        .sidebar-nav .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
-        .sidebar-footer {
-            padding: 16px 12px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-        }
-        .sidebar-footer .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            margin-bottom: 6px;
-        }
-        .sidebar-footer .user-info .avatar {
-            width: 32px; height: 32px;
-            background: #1A4DFF;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 13px;
-        }
-        .sidebar-footer .user-info .name { font-size: 13px; font-weight: 600; }
-        .sidebar-footer .user-info .role { font-size: 11px; opacity: 0.5; }
-        .sidebar-footer .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            color: rgba(255,255,255,0.5);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .sidebar-footer .logout-btn:hover { background: rgba(255,255,255,0.06); color: #FF6B6B; }
-
-        /* ─── MAIN ─────────────────────────────── */
-        .main {
-            margin-left: 260px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .topbar {
-            background: #fff;
-            padding: 16px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #E2E8F0;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-        .topbar h2 { font-size: 20px; font-weight: 700; }
-        .topbar .date { font-size: 13px; color: #5A6A7A; }
-        .topbar .toggle-sidebar {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #1A1A2E;
-        }
-        .content {
-            padding: 24px 32px;
-            flex: 1;
-        }
-        .page { display: none; }
-        .page.active { display: block; }
-
-        /* ─── KPI CARDS ────────────────────────── */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-            margin-bottom: 28px;
-        }
-        .kpi-card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 24px;
-            border: 1px solid #E2E8F0;
-        }
-        .kpi-card .kpi-label { font-size: 12px; font-weight: 600; color: #5A6A7A; text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-card .kpi-value { font-size: 32px; font-weight: 800; color: #0F1B3D; margin: 8px 0 4px; }
-        .kpi-card .kpi-sub { font-size: 12px; color: #5A6A7A; }
-        .kpi-card .kpi-icon { font-size: 24px; margin-bottom: 8px; }
-
-        /* ─── TABLE ────────────────────────────── */
-        .table-card {
-            background: #fff;
-            border-radius: 14px;
-            border: 1px solid #E2E8F0;
-            overflow: hidden;
-        }
-        .table-card .table-header {
-            padding: 18px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #E2E8F0;
-        }
-        .table-card .table-header h3 { font-size: 16px; font-weight: 700; }
-        .table-card .table-header .actions { display: flex; gap: 8px; }
-        .table-card table { width: 100%; border-collapse: collapse; }
-        .table-card th {
-            text-align: left;
-            padding: 12px 24px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #5A6A7A;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: #F7F9FC;
-            border-bottom: 1px solid #E2E8F0;
-        }
-        .table-card td {
-            padding: 12px 24px;
-            font-size: 13px;
-            border-bottom: 1px solid #F0F2F5;
-        }
-        .table-card tr:hover td { background: #F7F9FC; }
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .badge-success { background: #E6F7E6; color: #0F9D58; }
-        .badge-warning { background: #FFF3E0; color: #FF6D00; }
-        .badge-danger { background: #FFEBEE; color: #D32F2F; }
-
-        /* ─── BUTTONS ──────────────────────────── */
-        .btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 10px 20px; border-radius: 8px;
-            font-size: 13px; font-weight: 600; font-family: inherit;
-            border: none; cursor: pointer; transition: all 0.2s;
-        }
-        .btn-primary { background: #1A4DFF; color: #fff; }
-        .btn-primary:hover { background: #0F3BCC; }
-        .btn-secondary { background: #F0F2F5; color: #1A1A2E; border: 1px solid #E2E8F0; }
-        .btn-secondary:hover { background: #E2E8F0; }
-        .btn-success { background: #0F9D58; color: #fff; }
-        .btn-success:hover { background: #0B7A44; }
-        .btn-sm { padding: 6px 14px; font-size: 12px; }
-        .btn-danger { background: #D32F2F; color: #fff; }
-        .btn-danger:hover { background: #B71C1C; }
-
-        /* ─── FORMS ────────────────────────────── */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 16px;
-        }
-        .form-grid label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px; color: #1A1A2E; }
-        .form-grid input, .form-grid select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: inherit;
-            outline: none;
-        }
-        .form-grid input:focus, .form-grid select:focus { border-color: #1A4DFF; }
-
-        /* ─── SEARCH BAR ───────────────────────── */
-        .search-bar {
-            display: flex; gap: 10px; align-items: center;
-            padding: 16px 24px;
-            border-bottom: 1px solid #E2E8F0;
-        }
-        .search-bar input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: inherit;
-            outline: none;
-        }
-        .search-bar input:focus { border-color: #1A4DFF; }
-
-        /* ─── MODAL ────────────────────────────── */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-overlay.open { display: flex; }
-        .modal {
-            background: #fff;
-            border-radius: 16px;
-            padding: 32px;
-            width: 90%;
-            max-width: 520px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
-        .modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
-
-        /* ─── RESPONSIVE ───────────────────────── */
-        @media (max-width: 900px) {
-            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-            .form-grid { grid-template-columns: 1fr; }
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            .sidebar.open { transform: translateX(0); }
-            .main { margin-left: 0; }
-            .topbar .toggle-sidebar { display: block; }
-        }
-        @media (max-width: 600px) {
-            .kpi-grid { grid-template-columns: 1fr; }
-            .content { padding: 16px; }
-            .topbar { padding: 12px 16px; }
-        }
-
-        /* ─── SCROLLBAR ────────────────────────── */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #D0D5DD; border-radius: 3px; }
-
-        /* ─── TOAST ────────────────────────────── */
-        .toast {
-            position: fixed; bottom: 24px; right: 24px;
-            background: #0F9D58; color: #fff;
-            padding: 14px 24px; border-radius: 10px;
-            font-size: 14px; font-weight: 600;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 300;
-        }
-        .toast.show { transform: translateY(0); opacity: 1; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PAYROLL — MANIT SOLUTIONS</title>
+<link rel="icon" href="assets/favicon.png" type="image/png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #F7F9FC; color: #1A1A2E;
+  display: flex; min-height: 100vh;
+}
+/* ───────── SIDEBAR ───────── */
+.sidebar {
+  width: 250px; background: #0F1B3D; color: #fff;
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+  transition: transform 0.3s;
+}
+.sidebar-brand {
+  padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-brand img { height: 30px; filter: brightness(0) invert(1); }
+.sidebar-brand span { font-weight: 800; font-size: 15px; letter-spacing: 0.3px; }
+.sidebar-nav { flex: 1; padding: 14px 10px; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 10px;
+  cursor: pointer; font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  transition: all 0.15s; margin-bottom: 2px;
+}
+.nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.nav-item.active { background: #1A4DFF; color: #fff; }
+.nav-item .nav-icon { font-size: 16px; width: 22px; text-align: center; }
+.sidebar-footer {
+  padding: 14px 10px; border-top: 1px solid rgba(255,255,255,0.06);
+}
+.user-info {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px; margin-bottom: 4px;
+}
+.avatar {
+  width: 30px; height: 30px; background: #1A4DFF;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px;
+}
+.user-name { font-size: 12px; font-weight: 600; }
+.user-role { font-size: 10px; opacity: 0.5; }
+.logout-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 12px; color: rgba(255,255,255,0.4);
+  cursor: pointer; transition: all 0.15s;
+}
+.logout-btn:hover { background: rgba(255,255,255,0.06); color: #FF6B6B; }
+/* ───────── MAIN ───────── */
+.main { margin-left: 250px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar {
+  background: #fff; padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid #E2E8F0; position: sticky; top: 0; z-index: 50;
+}
+.topbar h2 { font-size: 18px; font-weight: 700; }
+.topbar .date-text { font-size: 12px; color: #5A6A7A; }
+.toggle-sidebar { display: none; background: none; border: none; font-size: 22px; cursor: pointer; color: #1A1A2E; padding: 4px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-link { font-size: 12px; color: #5A6A7A; text-decoration: none; }
+.topbar-link:hover { color: #1A4DFF; }
+.content { padding: 22px 28px; flex: 1; }
+.page { display: none; }
+.page.active { display: block; }
+/* ───────── KPI CARDS ───────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.kpi-card {
+  background: #fff; border-radius: 14px; padding: 22px;
+  border: 1px solid #E2E8F0;
+}
+.kpi-card .kpi-icon { font-size: 22px; margin-bottom: 6px; }
+.kpi-card .kpi-label { font-size: 11px; font-weight: 600; color: #5A6A7A; text-transform: uppercase; letter-spacing: 0.4px; }
+.kpi-card .kpi-value { font-size: 28px; font-weight: 800; color: #0F1B3D; margin: 6px 0 2px; }
+.kpi-card .kpi-sub { font-size: 11px; color: #5A6A7A; }
+.kpi-value.green { color: #0F9D58; }
+.kpi-value.red { color: #D32F2F; }
+/* ───────── TABLE CARD ───────── */
+.card {
+  background: #fff; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; margin-bottom: 20px;
+}
+.card-header {
+  padding: 16px 22px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid #E2E8F0; flex-wrap: wrap; gap: 8px;
+}
+.card-header h3 { font-size: 15px; font-weight: 700; }
+.card-header .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; padding: 10px 16px; font-size: 10px; font-weight: 600;
+  color: #5A6A7A; text-transform: uppercase; letter-spacing: 0.4px;
+  background: #F7F9FC; border-bottom: 1px solid #E2E8F0; white-space: nowrap;
+}
+td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid #F0F2F5; }
+tr:hover td { background: #F7F9FC; }
+tr:last-child td { border-bottom: none; }
+/* ───────── BADGE ───────── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+.badge-green { background: #E6F7E6; color: #0F9D58; }
+.badge-yellow { background: #FFF3E0; color: #E65100; }
+.badge-red { background: #FFEBEE; color: #D32F2F; }
+.badge-blue { background: #E3F2FD; color: #1565C0; }
+.badge-gray { background: #F0F2F5; color: #5A6A7A; }
+/* ───────── BUTTONS ───────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  border: none; cursor: pointer; transition: all 0.15s;
+}
+.btn-primary { background: #1A4DFF; color: #fff; }
+.btn-primary:hover { background: #0F3BCC; }
+.btn-secondary { background: #F0F2F5; color: #1A1A2E; border: 1px solid #E2E8F0; }
+.btn-secondary:hover { background: #E2E8F0; }
+.btn-success { background: #0F9D58; color: #fff; }
+.btn-success:hover { background: #0B7A44; }
+.btn-danger { background: #D32F2F; color: #fff; }
+.btn-danger:hover { background: #B71C1C; }
+.btn-warning { background: #FF6D00; color: #fff; }
+.btn-warning:hover { background: #E65100; }
+.btn-sm { padding: 6px 12px; font-size: 11px; }
+.btn-xs { padding: 4px 8px; font-size: 10px; border-radius: 6px; }
+/* ───────── FORMS ───────── */
+.search-bar { display: flex; gap: 10px; align-items: center; padding: 14px 16px; border-bottom: 1px solid #E2E8F0; flex-wrap: wrap; }
+.search-bar input, .search-bar select {
+  padding: 8px 12px; border: 1.5px solid #E2E8F0; border-radius: 8px; font-size: 12px; font-family: inherit; outline: none;
+}
+.search-bar input:focus, .search-bar select:focus { border-color: #1A4DFF; }
+.search-bar input { flex: 1; min-width: 150px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.form-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { }
+.form-group label { font-size: 11px; font-weight: 600; display: block; margin-bottom: 3px; color: #1A1A2E; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 9px 11px;
+  border: 1.5px solid #E2E8F0; border-radius: 8px;
+  font-size: 12px; font-family: inherit; outline: none; background: #fff;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #1A4DFF; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+/* ───────── MODAL ───────── */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.35); z-index: 200;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 14px; padding: 28px;
+  width: 100%; max-width: 560px; max-height: 80vh; overflow-y: auto;
+}
+.modal.wide { max-width: 700px; }
+.modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+/* ───────── PAYSLIP PRINT ───────── */
+.payslip-box {
+  background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 32px; max-width: 700px; margin: 0 auto;
+}
+.payslip-box .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #0F1B3D; padding-bottom: 16px; }
+.payslip-box .header h2 { font-size: 20px; color: #0F1B3D; }
+.payslip-box .header p { font-size: 12px; color: #5A6A7A; }
+.payslip-box .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #E2E8F0; font-size: 13px; }
+.payslip-box .row.total { font-weight: 700; font-size: 15px; border-bottom: 2px solid #0F1B3D; padding: 12px 0; }
+.payslip-box .row .label { color: #5A6A7A; }
+.payslip-box .print-btn { text-align: center; margin-top: 20px; }
+@media print { .sidebar, .topbar, .print-btn, .modal-overlay { display: none !important; } body { background: #fff; } .payslip-box { border: none; box-shadow: none; } }
+/* ───────── TOAST ───────── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #0F9D58; color: #fff;
+  padding: 12px 22px; border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s; z-index: 300; max-width: 360px;
+}
+.toast.error { background: #D32F2F; }
+.toast.show { transform: translateY(0); opacity: 1; }
+/* ───────── RESPONSIVE ───────── */
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid.col3 { grid-template-columns: 1fr; }
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .toggle-sidebar { display: block; }
+}
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .content { padding: 14px; }
+  .topbar { padding: 10px 14px; }
+  .topbar h2 { font-size: 15px; }
+  .modal { padding: 20px; }
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D0D5DD; border-radius: 3px; }
+</style>
 </head>
 <body>
 
-<!-- ═══ SIDEBAR ═════════════════════════════════ -->
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-        <img src="assets/logo.png" alt="MANIT" />
-        <span>MANIT PAYROLL</span>
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="assets/logo.png" alt="M" onerror="this.style.display='none'" />
+    <span>MANIT PAYROLL</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item" data-page="employees" onclick="showPage('employees')"><span class="nav-icon">👤</span>Employees</div>
+    <div class="nav-item" data-page="departments" onclick="showPage('departments')"><span class="nav-icon">🏢</span>Departments</div>
+    <div class="nav-item" data-page="attendance" onclick="showPage('attendance')"><span class="nav-icon">📋</span>Attendance</div>
+    <div class="nav-item" data-page="salary" onclick="showPage('salary')"><span class="nav-icon">💰</span>Salary</div>
+    <div class="nav-item" data-page="payslip" onclick="showPage('payslip')"><span class="nav-icon">📄</span>Payslips</div>
+    <div class="nav-item" data-page="users" onclick="showPage('users')"><span class="nav-icon">🔐</span>Users</div>
+    <div class="nav-item" data-page="settings" onclick="showPage('settings')"><span class="nav-icon">⚙️</span>Settings</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="avatar" id="sidebarAvatar">A</div>
+      <div><div class="user-name" id="sidebarUserName">Admin</div><div class="user-role" id="sidebarUserRole">Administrator</div></div>
     </div>
-    <div class="sidebar-nav">
-        <div class="nav-item active" onclick="showPage('dashboard-page', this)">
-            <span class="icon">📊</span> Dashboard
-        </div>
-        <div class="nav-item" onclick="showPage('employees-page', this)">
-            <span class="icon">👤</span> Employees
-        </div>
-        <div class="nav-item" onclick="showPage('attendance-page', this)">
-            <span class="icon">📋</span> Attendance
-        </div>
-        <div class="nav-item" onclick="showPage('salary-page', this)">
-            <span class="icon">💰</span> Salary
-        </div>
-        <div class="nav-item" onclick="showPage('payslip-page', this)">
-            <span class="icon">📄</span> Payslip
-        </div>
-    </div>
-    <div class="sidebar-footer">
-        <div class="user-info">
-            <div class="avatar">A</div>
-            <div>
-                <div class="name" id="sidebarUserName">Admin</div>
-                <div class="role">Administrator</div>
-            </div>
-        </div>
-        <div class="logout-btn" onclick="handleLogout()">
-            <span>🚪</span> Logout
-        </div>
-    </div>
-</div>
+    <div class="logout-btn" onclick="handleLogout()"><span>🚪</span> Logout</div>
+  </div>
+</aside>
 
-<!-- ═══ MAIN ════════════════════════════════════ -->
+<!-- ═══ MAIN ═══ -->
 <div class="main">
-    <div class="topbar">
-        <button class="toggle-sidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-        <div>
-            <h2 id="pageTitle">Dashboard</h2>
-            <div class="date" id="currentDate"></div>
-        </div>
-        <a href="index.html" style="font-size:13px;color:#5A6A7A;text-decoration:none;">← Website</a>
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="toggle-sidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div>
+        <h2 id="pageTitle">Dashboard</h2>
+        <div class="date-text" id="currentDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <a href="index.html" class="topbar-link">← Website</a>
+    </div>
+  </header>
+
+  <div class="content" id="mainContent">
+
+    <!-- ══ PAGE: DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-icon">👤</div><div class="kpi-label">Total Employees</div><div class="kpi-value" id="kpiTotalEmployees">0</div><div class="kpi-sub">Active in system</div></div>
+        <div class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-label">Present Today</div><div class="kpi-value green" id="kpiPresentToday">0</div><div class="kpi-sub" id="kpiPresentSub">0% attendance</div></div>
+        <div class="kpi-card"><div class="kpi-icon">📄</div><div class="kpi-label">Pending Payslips</div><div class="kpi-value red" id="kpiPendingPayslips">0</div><div class="kpi-sub" id="kpiPendingSub">This month</div></div>
+        <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-label">Net Payroll</div><div class="kpi-value" id="kpiNetPayroll">₹0</div><div class="kpi-sub" id="kpiPayrollSub">Current month</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Recent Employees</h3><span style="font-size:11px;color:#5A6A7A;">Last 5 added</span></div>
+        <table><thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Status</th></tr></thead><tbody id="recentEmployeesTable"></tbody></table>
+      </div>
     </div>
 
-    <div class="content">
-
-        <!-- ══ DASHBOARD PAGE ════════════════════ -->
-        <div class="page active" id="dashboard-page">
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-icon">👤</div>
-                    <div class="kpi-label">Total Employees</div>
-                    <div class="kpi-value" id="kpiTotalEmployees">0</div>
-                    <div class="kpi-sub">Across all departments</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">✅</div>
-                    <div class="kpi-label">Present Today</div>
-                    <div class="kpi-value" id="kpiPresentToday">0</div>
-                    <div class="kpi-sub" id="kpiPresentSub">0% attendance</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">📄</div>
-                    <div class="kpi-label">Pending Payslips</div>
-                    <div class="kpi-value" id="kpiPendingPayslips">0</div>
-                    <div class="kpi-sub">This month</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">💰</div>
-                    <div class="kpi-label">Net Payroll (INR)</div>
-                    <div class="kpi-value" id="kpiNetPayroll">0</div>
-                    <div class="kpi-sub">Current month</div>
-                </div>
-            </div>
-            <div class="table-card">
-                <div class="table-header">
-                    <h3>Recent Employees</h3>
-                    <span style="font-size:12px;color:#5A6A7A;">Last 5 added</span>
-                </div>
-                <table>
-                    <thead>
-                        <tr><th>ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Status</th></tr>
-                    </thead>
-                    <tbody id="recentEmployeesTable"></tbody>
-                </table>
-            </div>
+    <!-- ══ PAGE: EMPLOYEES ══ -->
+    <div class="page" id="page-employees">
+      <div class="card">
+        <div class="card-header"><h3>Employee Directory</h3><div class="actions"><button class="btn btn-primary" onclick="openModal('employeeModal')">+ Add Employee</button></div></div>
+        <div class="search-bar">
+          <input type="text" placeholder="Search name, ID, department..." oninput="renderEmployees(this.value)" />
+          <select onchange="renderEmployees(document.querySelector('#page-employees .search-bar input').value)" id="empDeptFilter"><option value="">All Depts</option></select>
         </div>
-
-        <!-- ══ EMPLOYEES PAGE ════════════════════ -->
-        <div class="page" id="employees-page">
-            <div class="table-card">
-                <div class="table-header">
-                    <h3>Employee Directory</h3>
-                    <div class="actions">
-                        <button class="btn btn-primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
-                    </div>
-                </div>
-                <div class="search-bar">
-                    <input type="text" placeholder="Search by name, ID, department..." oninput="filterEmployees(this.value)" />
-                </div>
-                <table>
-                    <thead>
-                        <tr><th>ID</th><th>Name</th><th>Department</th><th>Sub Dept</th><th>Designation</th><th>Status</th><th>Action</th></tr>
-                    </thead>
-                    <tbody id="employeesTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ══ ATTENDANCE PAGE ═══════════════════ -->
-        <div class="page" id="attendance-page">
-            <div class="table-card">
-                <div class="table-header">
-                    <h3>Today's Attendance</h3>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        <input type="date" id="attendanceDate" style="padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;" />
-                        <button class="btn btn-secondary btn-sm" onclick="markAllPresent()">Mark All Present</button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr><th>ID</th><th>Name</th><th>Department</th><th>Status</th><th>Time</th></tr>
-                    </thead>
-                    <tbody id="attendanceTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ══ SALARY PAGE ═══════════════════════ -->
-        <div class="page" id="salary-page">
-            <div class="kpi-grid" style="margin-bottom:20px;">
-                <div class="kpi-card"><div class="kpi-label">Total Salary</div><div class="kpi-value" id="sTotalSalary">₹0</div></div>
-                <div class="kpi-card"><div class="kpi-label">Total Paid</div><div class="kpi-value" id="sTotalPaid" style="color:#0F9D58;">₹0</div></div>
-                <div class="kpi-card"><div class="kpi-label">Total Unpaid</div><div class="kpi-value" id="sTotalUnpaid" style="color:#D32F2F;">₹0</div></div>
-                <div class="kpi-card"><div class="kpi-label">Employees</div><div class="kpi-value" id="sTotalEmp">0</div></div>
-            </div>
-            <div class="table-card">
-                <div class="table-header">
-                    <h3>Salary Records</h3>
-                    <div class="actions">
-                        <button class="btn btn-success" onclick="generateSalary()">⚡ Generate Salary</button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr><th>Employee</th><th>Basic</th><th>DA</th><th>Gross</th><th>PF</th><th>ESIC</th><th>PT</th><th>Net</th><th>Status</th></tr>
-                    </thead>
-                    <tbody id="salaryTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ══ PAYSLIP PAGE ══════════════════════ -->
-        <div class="page" id="payslip-page">
-            <div class="table-card">
-                <div class="table-header">
-                    <h3>Payslips</h3>
-                    <div class="actions">
-                        <select id="payslipMonth" style="padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;"></select>
-                        <button class="btn btn-primary" onclick="generateAllPayslips()">📄 Generate All</button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr><th>ID</th><th>Employee</th><th>Department</th><th>Net Salary</th><th>Payslip</th></tr>
-                    </thead>
-                    <tbody id="payslipTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-    </div><!-- /.content -->
-</div><!-- /.main -->
-
-<!-- ═══ ADD EMPLOYEE MODAL ═════════════════════ -->
-<div class="modal-overlay" id="addEmployeeModal">
-    <div class="modal">
-        <h3>Add New Employee</h3>
-        <div class="form-grid">
-            <div>
-                <label>Employee ID</label>
-                <input type="text" id="empId" placeholder="EMP006" />
-            </div>
-            <div>
-                <label>Employee Name</label>
-                <input type="text" id="empName" placeholder="Full name" />
-            </div>
-            <div>
-                <label>Department</label>
-                <select id="empDept">
-                    <option>Engineering</option><option>HR</option><option>Finance</option><option>Marketing</option><option>Operations</option>
-                </select>
-            </div>
-            <div>
-                <label>Sub Department</label>
-                <input type="text" id="empSubDept" placeholder="Sub department" />
-            </div>
-            <div>
-                <label>Designation</label>
-                <input type="text" id="empDesignation" placeholder="Designation" />
-            </div>
-            <div>
-                <label>Status</label>
-                <select id="empStatus"><option>Active</option><option>Inactive</option></select>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeAddEmployeeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
-        </div>
+        <table><thead><tr><th>Code</th><th>Name</th><th>Department</th><th>Designation</th><th>Basic</th><th>Status</th><th>Action</th></tr></thead><tbody id="employeesTableBody"></tbody></table>
+      </div>
     </div>
+
+    <!-- ══ PAGE: DEPARTMENTS ══ -->
+    <div class="page" id="page-departments">
+      <div class="card">
+        <div class="card-header"><h3>Departments</h3><div class="actions"><button class="btn btn-primary" onclick="openModal('deptModal')">+ Add Department</button></div></div>
+        <table><thead><tr><th>ID</th><th>Name</th><th>Employees</th><th>Action</th></tr></thead><tbody id="deptTableBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: ATTENDANCE ══ -->
+    <div class="page" id="page-attendance">
+      <div class="card">
+        <div class="card-header">
+          <h3>Daily Attendance</h3>
+          <div class="actions">
+            <input type="date" id="attendanceDate" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderAttendance()" />
+            <button class="btn btn-success btn-sm" onclick="markAllPresent()">Mark All Present</button>
+          </div>
+        </div>
+        <table><thead><tr><th>Code</th><th>Name</th><th>Department</th><th>Status</th><th>Time</th><th>Action</th></tr></thead><tbody id="attendanceTableBody"></tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Monthly Summary</h3>
+          <div class="actions">
+            <select id="attMonth" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderMonthlyAttendance()"></select>
+            <select id="attYear" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderMonthlyAttendance()"></select>
+            <button class="btn btn-secondary btn-sm" onclick="computeMonthlyAttendance()">⟳ Compute</button>
+          </div>
+        </div>
+        <table><thead><tr><th>Employee</th><th>Present</th><th>Absent</th><th>Late</th><th>Holiday</th><th>Total</th><th>%</th></tr></thead><tbody id="monthlyAttTableBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: SALARY ══ -->
+    <div class="page" id="page-salary">
+      <div class="kpi-grid" style="margin-bottom:16px;">
+        <div class="kpi-card"><div class="kpi-label">Total Salary</div><div class="kpi-value" id="sTotalSalary">₹0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Total Paid</div><div class="kpi-value green" id="sTotalPaid">₹0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Total Unpaid</div><div class="kpi-value red" id="sTotalUnpaid">₹0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Employees</div><div class="kpi-value" id="sTotalEmp">0</div><div class="kpi-sub" id="sTotalSub"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Salary Records</h3>
+          <div class="actions">
+            <select id="salMonth" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderSalary()"></select>
+            <select id="salYear" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderSalary()"></select>
+            <button class="btn btn-success btn-sm" onclick="generateSalary()">⚡ Generate</button>
+            <button class="btn btn-secondary btn-sm" onclick="togglePaidAll()">✓ Pay All</button>
+          </div>
+        </div>
+        <table><thead><tr><th>Code</th><th>Employee</th><th>Basic</th><th>DA</th><th>Gross</th><th>PF</th><th>ESIC</th><th>PT</th><th>Net</th><th>Status</th><th>Action</th></tr></thead><tbody id="salaryTableBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: PAYSLIP ══ -->
+    <div class="page" id="page-payslip">
+      <div class="card">
+        <div class="card-header">
+          <h3>Payslips</h3>
+          <div class="actions">
+            <select id="psMonth" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderPayslipList()"></select>
+            <select id="psYear" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderPayslipList()"></select>
+            <button class="btn btn-primary btn-sm" onclick="generateAllPayslips()">📄 Generate All</button>
+          </div>
+        </div>
+        <table><thead><tr><th>Code</th><th>Employee</th><th>Department</th><th>Net Salary</th><th>Status</th><th>Action</th></tr></thead><tbody id="payslipTableBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: USERS ══ -->
+    <div class="page" id="page-users">
+      <div class="card">
+        <div class="card-header"><h3>System Users</h3><div class="actions"><button class="btn btn-primary" onclick="openModal('userModal')">+ Add User</button></div></div>
+        <table><thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Action</th></tr></thead><tbody id="usersTableBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: SETTINGS ══ -->
+    <div class="page" id="page-settings">
+      <div class="card">
+        <div class="card-header"><h3>Company Settings</h3></div>
+        <div style="padding:22px;">
+          <div class="form-grid">
+            <div class="form-group"><label>Company Name</label><input type="text" id="setCompanyName" /></div>
+            <div class="form-group"><label>Address</label><input type="text" id="setAddress" /></div>
+            <div class="form-group"><label>Phone</label><input type="text" id="setPhone" /></div>
+            <div class="form-group"><label>Email</label><input type="text" id="setEmail" /></div>
+            <div class="form-group"><label>PF Percentage (%)</label><input type="number" id="setPFPercent" step="0.1" /></div>
+            <div class="form-group"><label>ESIC Percentage (%)</label><input type="number" id="setESICPercent" step="0.1" /></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ═══ MODAL: EMPLOYEE ═══ -->
+<div class="modal-overlay" id="modal-employee">
+  <div class="modal">
+    <h3 id="empModalTitle">Add Employee</h3>
+    <input type="hidden" id="empEditId" />
+    <div class="form-grid">
+      <div class="form-group"><label>Employee Code</label><input type="text" id="empCode" placeholder="EMP001" /></div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="empName" placeholder="Full name" /></div>
+      <div class="form-group"><label>Department</label><select id="empDepartment"></select></div>
+      <div class="form-group"><label>Designation</label><input type="text" id="empDesignation" placeholder="Designation" /></div>
+      <div class="form-group"><label>Basic Salary (₹)</label><input type="number" id="empBasic" value="25000" /></div>
+      <div class="form-group"><label>DA (₹)</label><input type="number" id="empDA" value="5000" /></div>
+      <div class="form-group"><label><input type="checkbox" id="empPF" checked /> Enable PF</label></div>
+      <div class="form-group"><label><input type="checkbox" id="empESIC" checked /> Enable ESIC</label></div>
+      <div class="form-group"><label>Status</label><select id="empStatus"><option>Active</option><option>Inactive</option></select></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('employee')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
+    </div>
+  </div>
 </div>
 
-<!-- ═══ TOAST ═══════════════════════════════════ -->
+<!-- ═══ MODAL: DEPARTMENT ═══ -->
+<div class="modal-overlay" id="modal-dept">
+  <div class="modal" style="max-width:400px;">
+    <h3 id="deptModalTitle">Add Department</h3>
+    <input type="hidden" id="deptEditId" />
+    <div class="form-grid" style="grid-template-columns:1fr;">
+      <div class="form-group"><label>Department Name</label><input type="text" id="deptName" placeholder="e.g. Engineering" /></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('dept')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDepartment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: USER ═══ -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal" style="max-width:400px;">
+    <h3 id="userModalTitle">Add User</h3>
+    <input type="hidden" id="userEditId" />
+    <div class="form-grid" style="grid-template-columns:1fr;">
+      <div class="form-group"><label>Username</label><input type="text" id="userUsername" placeholder="username" /></div>
+      <div class="form-group"><label>Password</label><input type="text" id="userPassword" placeholder="password" /></div>
+      <div class="form-group"><label>Display Name</label><input type="text" id="userDisplayName" placeholder="Full name" /></div>
+      <div class="form-group"><label>Role</label><select id="userRole"><option value="admin">Admin</option><option value="user">User</option></select></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('user')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAYSLIP PRINT ═══ -->
+<div class="modal-overlay" id="modal-payslip">
+  <div class="modal wide">
+    <div class="payslip-box" id="payslipPrintArea">
+      <div class="header" id="psPrintHeader"><h2>MANIT SOLUTIONS</h2><p>Salary Payslip</p></div>
+      <div id="psPrintBody"></div>
+      <div class="print-btn"><button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button><button class="btn btn-secondary" onclick="closeModal('payslip')" style="margin-left:8px;">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
 <div class="toast" id="toast"></div>
 
 <script>
-    // ─── DEMO DATA ─────────────────────────────────
-    let employees = [
-        { id: 'EMP001', name: 'Rahul Sharma', dept: 'Engineering', subDept: 'Software', designation: 'Senior Developer', status: 'Active', basic: 45000, da: 9000, pf: 5400, esic: 2025, pt: 200 },
-        { id: 'EMP002', name: 'Priya Patel', dept: 'HR', subDept: 'Recruitment', designation: 'HR Manager', status: 'Active', basic: 55000, da: 11000, pf: 6600, esic: 2475, pt: 200 },
-        { id: 'EMP003', name: 'Amit Verma', dept: 'Finance', subDept: 'Accounts', designation: 'Accountant', status: 'Active', basic: 35000, da: 7000, pf: 4200, esic: 1575, pt: 200 },
-        { id: 'EMP004', name: 'Sneha Gupta', dept: 'Marketing', subDept: 'Digital', designation: 'Marketing Lead', status: 'Active', basic: 42000, da: 8400, pf: 5040, esic: 1890, pt: 200 },
-        { id: 'EMP005', name: 'Vikram Singh', dept: 'Operations', subDept: 'Admin', designation: 'Operations Head', status: 'Active', basic: 60000, da: 12000, pf: 7200, esic: 2700, pt: 200 },
-    ];
+// ═══════════════════════════════════════════════════════════════════
+// DATA LAYER — localStorage with auto-seed
+// ═══════════════════════════════════════════════════════════════════
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const STORE = {
+  get(k, def) { try { const d = localStorage.getItem('pw_'+k); return d ? JSON.parse(d) : def; } catch { return def; } },
+  set(k, v) { localStorage.setItem('pw_'+k, JSON.stringify(v)); }
+};
+let _uid = STORE.get('uid', 100);
 
-    let attendanceRecords = {};
-    let salaryRecords = [];
-    let payslipRecords = [];
+function uid() { _uid++; STORE.set('uid', _uid); return _uid; }
 
-    function getGross(basic, da) { return basic + da; }
-    function getNet(basic, da, pf, esic, pt) { return basic + da - pf - esic - pt; }
+function seedData() {
+  if (STORE.get('seeded', false)) return;
+  const depts = [
+    { id: uid(), name: 'Engineering' }, { id: uid(), name: 'Human Resources' },
+    { id: uid(), name: 'Finance' },     { id: uid(), name: 'Marketing' },
+    { id: uid(), name: 'Operations' },
+  ];
+  STORE.set('departments', depts);
+  STORE.set('users', [
+    { id: uid(), username: 'admin', password: 'admin123', name: 'Administrator', role: 'admin' },
+  ]);
+  STORE.set('settings', { companyName: 'MANIT SOLUTIONS', address: 'India', phone: '+91-XXXXXXXXXX', email: 'info@manitsolutions.com', pfPercent: 12, esicPercent: 0.75 });
+  const emps = [
+    { id: uid(), code: 'EMP001', name: 'Rahul Sharma', departmentId: depts[0].id, designation: 'Senior Developer', basic: 45000, da: 9000, pfEnabled: true, esicEnabled: true, status: 'Active' },
+    { id: uid(), code: 'EMP002', name: 'Priya Patel',   departmentId: depts[1].id, designation: 'HR Manager',    basic: 55000, da: 11000, pfEnabled: true, esicEnabled: true, status: 'Active' },
+    { id: uid(), code: 'EMP003', name: 'Amit Verma',    departmentId: depts[2].id, designation: 'Accountant',    basic: 35000, da: 7000, pfEnabled: true, esicEnabled: true, status: 'Active' },
+    { id: uid(), code: 'EMP004', name: 'Sneha Gupta',   departmentId: depts[3].id, designation: 'Marketing Lead', basic: 42000, da: 8400, pfEnabled: true, esicEnabled: true, status: 'Active' },
+    { id: uid(), code: 'EMP005', name: 'Vikram Singh',  departmentId: depts[4].id, designation: 'Operations Head',basic: 60000, da: 12000, pfEnabled: true, esicEnabled: true, status: 'Active' },
+  ];
+  STORE.set('employees', emps);
+  STORE.set('seeded', true);
+}
 
-    // ─── INIT ──────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', function() {
-        if (!localStorage.getItem('payroll_logged_in')) {
-            window.location.href = 'login.html';
-            return;
-        }
-        document.getElementById('sidebarUserName').textContent =
-            localStorage.getItem('payroll_user') || 'Admin';
-        document.getElementById('currentDate').textContent =
-            'TODAY: ' + new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+seedData();
 
-        // Populate attendance date
-        document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+// Helpers
+function getDeptName(id) { const d = STORE.get('departments', []).find(x => x.id === id); return d ? d.name : '—'; }
+function getEmployee(id) { return STORE.get('employees', []).find(x => x.id === id); }
+function getEmpName(id) { const e = getEmployee(id); return e ? e.name + ' (' + e.code + ')' : '—'; }
 
-        // Populate payslip month
-        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        const m = document.getElementById('payslipMonth');
-        const now = new Date();
-        months.forEach((name, i) => {
-            const opt = document.createElement('option');
-            opt.value = i; opt.textContent = name + ' ' + now.getFullYear();
-            if (i === now.getMonth()) opt.selected = true;
-            m.appendChild(opt);
-        });
+// ─── AUTH ───────────────────────────────
+function requireAuth() {
+  if (!localStorage.getItem('pw_logged_in')) { window.location.href = 'login.html'; return false; }
+  document.getElementById('sidebarUserName').textContent = localStorage.getItem('pw_user_name') || 'Admin';
+  document.getElementById('sidebarUserRole').textContent =
+    localStorage.getItem('pw_user_role') === 'admin' ? 'Administrator' : 'User';
+  document.getElementById('sidebarAvatar').textContent =
+    (localStorage.getItem('pw_user_name') || 'A')[0];
+  return true;
+}
+function handleLogout() {
+  localStorage.removeItem('pw_logged_in'); localStorage.removeItem('pw_user_name');
+  localStorage.removeItem('pw_user_role'); localStorage.removeItem('pw_user');
+  window.location.href = 'login.html';
+}
 
-        // Init demo attendance
-        employees.forEach(e => {
-            attendanceRecords[e.id] = { status: 'P', time: '09:15 AM' };
-        });
+// ─── PAGE NAV ───────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  const nav = document.querySelector(`.nav-item[data-page="${name}"]`);
+  if (nav) nav.classList.add('active');
+  const titles = { dashboard:'Dashboard', employees:'Employees', departments:'Departments',
+    attendance:'Attendance', salary:'Salary', payslip:'Payslips', users:'Users', settings:'Settings' };
+  document.getElementById('pageTitle').textContent = titles[name] || 'Dashboard';
+  if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+  // Refresh on show
+  if (name === 'dashboard') renderDashboard();
+  else if (name === 'employees') { populateDeptFilter(); renderEmployees(); }
+  else if (name === 'departments') renderDepartments();
+  else if (name === 'attendance') renderAttendance();
+  else if (name === 'salary') renderSalary();
+  else if (name === 'payslip') renderPayslipList();
+  else if (name === 'users') renderUsers();
+  else if (name === 'settings') loadSettings();
+}
 
-        // Init demo salary
-        generateSalary();
+// ─── MODALS ─────────────────────────────
+function openModal(name) {
+  document.getElementById('modal-' + name).classList.add('open');
+}
+function closeModal(name) {
+  document.getElementById('modal-' + name).classList.remove('open');
+}
+function openEditModal(name) { openModal(name); }
 
-        renderAll();
+// ─── TOAST ──────────────────────────────
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.add('show'), 10);
+  clearTimeout(t._hide);
+  t._hide = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── DATE HELPERS ───────────────────────
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function currentMonth() { return new Date().getMonth(); }
+function currentYear() { return new Date().getFullYear(); }
+function daysInMonth(m, y) { return new Date(y, m + 1, 0).getDate(); }
+
+// Populate month/year dropdowns
+function populateMonthYear(monthId, yearId, selectedM, selectedY) {
+  const mSel = document.getElementById(monthId); const ySel = document.getElementById(yearId);
+  if (!mSel || !ySel) return;
+  const sm = selectedM !== undefined ? selectedM : currentMonth();
+  const sy = selectedY !== undefined ? selectedY : currentYear();
+  mSel.innerHTML = MONTHS.map((n,i) => `<option value="${i}" ${i===sm?'selected':''}>${n}</option>`).join('');
+  ySel.innerHTML = '';
+  for (let y = sy - 2; y <= sy + 1; y++) {
+    ySel.innerHTML += `<option value="${y}" ${y===sy?'selected':''}>${y}</option>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const emps = STORE.get('employees', []);
+  const att = STORE.get('attendance', []);
+  const today = todayStr();
+  const todayAtt = att.filter(a => a.date === today);
+  const presentToday = todayAtt.filter(a => a.status === 'P').length;
+  const total = emps.length;
+  
+  document.getElementById('kpiTotalEmployees').textContent = total;
+  document.getElementById('kpiPresentToday').textContent = presentToday;
+  document.getElementById('kpiPresentSub').textContent = total > 0 ? Math.round(presentToday/total*100) + '% attendance' : '0% attendance';
+
+  const salary = STORE.get('salary', []);
+  const currSal = salary.filter(s => s.month === currentMonth() && s.year === currentYear());
+  const pending = currSal.filter(s => !s.paid).length;
+  const netPayroll = currSal.reduce((sum, s) => sum + s.net, 0);
+  document.getElementById('kpiPendingPayslips').textContent = pending;
+  document.getElementById('kpiPendingSub').textContent = currSal.length > 0 ? pending + ' of ' + currSal.length + ' unpaid' : 'No records';
+  document.getElementById('kpiNetPayroll').textContent = '₹' + netPayroll.toLocaleString('en-IN');
+  document.getElementById('kpiPayrollSub').textContent = MONTHS[currentMonth()] + ' ' + currentYear();
+
+  const recent = [...emps].reverse().slice(0, 5);
+  document.getElementById('recentEmployeesTable').innerHTML = recent.map(e =>
+    `<tr><td>${esc(e.code)}</td><td><strong>${esc(e.name)}</strong></td><td>${esc(getDeptName(e.departmentId))}</td><td>${esc(e.designation)}</td><td><span class="badge badge-green">${esc(e.status)}</span></td></tr>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EMPLOYEES
+// ═══════════════════════════════════════════════════════════════════
+function populateDeptFilter() {
+  const s = document.getElementById('empDeptFilter');
+  if (!s) return;
+  const depts = STORE.get('departments', []);
+  s.innerHTML = '<option value="">All Depts</option>' + depts.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+}
+function populateDeptSelect(id) {
+  const s = document.getElementById(id);
+  if (!s) return;
+  const depts = STORE.get('departments', []);
+  s.innerHTML = depts.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+}
+
+function renderEmployees(filter) {
+  const emps = STORE.get('employees', []);
+  const deptF = document.getElementById('empDeptFilter');
+  const deptId = deptF ? deptF.value : '';
+  let list = emps;
+  if (filter) { const f = filter.toLowerCase(); list = list.filter(e => e.name.toLowerCase().includes(f) || e.code.toLowerCase().includes(f) || getDeptName(e.departmentId).toLowerCase().includes(f)); }
+  if (deptId) list = list.filter(e => e.departmentId == deptId);
+  
+  document.getElementById('employeesTableBody').innerHTML = list.length === 0
+    ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:#5A6A7A;">No employees found</td></tr>'
+    : list.map(e => {
+      const sal = calcSalary(e);
+      return `<tr>
+        <td>${esc(e.code)}</td>
+        <td><strong>${esc(e.name)}</strong></td>
+        <td>${esc(getDeptName(e.departmentId))}</td>
+        <td>${esc(e.designation)}</td>
+        <td>₹${sal.basic.toLocaleString('en-IN')}</td>
+        <td><span class="badge ${e.status==='Active'?'badge-green':'badge-gray'}">${esc(e.status)}</span></td>
+        <td>
+          <button class="btn btn-xs btn-secondary" onclick="editEmployee(${e.id})">✏️</button>
+          <button class="btn btn-xs btn-danger" onclick="deleteEmployee(${e.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+function openAddEmployeeModal() {
+  document.getElementById('empModalTitle').textContent = 'Add Employee';
+  document.getElementById('empEditId').value = '';
+  document.getElementById('empCode').value = '';
+  document.getElementById('empName').value = '';
+  document.getElementById('empDesignation').value = '';
+  document.getElementById('empBasic').value = 25000;
+  document.getElementById('empDA').value = 5000;
+  document.getElementById('empPF').checked = true;
+  document.getElementById('empESIC').checked = true;
+  document.getElementById('empStatus').value = 'Active';
+  populateDeptSelect('empDepartment');
+  openModal('employee');
+}
+
+function editEmployee(id) {
+  const e = getEmployee(id); if (!e) return;
+  document.getElementById('empModalTitle').textContent = 'Edit Employee';
+  document.getElementById('empEditId').value = id;
+  document.getElementById('empCode').value = e.code;
+  document.getElementById('empName').value = e.name;
+  document.getElementById('empDesignation').value = e.designation;
+  document.getElementById('empBasic').value = e.basic;
+  document.getElementById('empDA').value = e.da;
+  document.getElementById('empPF').checked = e.pfEnabled !== false;
+  document.getElementById('empESIC').checked = e.esicEnabled !== false;
+  document.getElementById('empStatus').value = e.status;
+  populateDeptSelect('empDepartment');
+  document.getElementById('empDepartment').value = e.departmentId;
+  openModal('employee');
+}
+
+function saveEmployee() {
+  const editId = document.getElementById('empEditId').value;
+  const code = document.getElementById('empCode').value.trim();
+  const name = document.getElementById('empName').value.trim();
+  if (!code || !name) { showToast('Please fill Code and Name', true); return; }
+  const data = {
+    code, name,
+    departmentId: parseInt(document.getElementById('empDepartment').value),
+    designation: document.getElementById('empDesignation').value.trim(),
+    basic: parseFloat(document.getElementById('empBasic').value) || 0,
+    da: parseFloat(document.getElementById('empDA').value) || 0,
+    pfEnabled: document.getElementById('empPF').checked,
+    esicEnabled: document.getElementById('empESIC').checked,
+    status: document.getElementById('empStatus').value,
+  };
+  let emps = STORE.get('employees', []);
+  if (editId) {
+    const idx = emps.findIndex(e => e.id == editId);
+    if (idx >= 0) { emps[idx] = { ...emps[idx], ...data }; }
+    STORE.set('employees', emps);
+    showToast('✅ Employee updated');
+  } else {
+    if (emps.find(e => e.code === code)) { showToast('Code already exists', true); return; }
+    data.id = uid();
+    emps.push(data);
+    STORE.set('employees', emps);
+    showToast('✅ Employee ' + name + ' added');
+  }
+  closeModal('employee');
+  renderEmployees();
+  renderDashboard();
+}
+
+function deleteEmployee(id) {
+  if (!confirm('Delete this employee?')) return;
+  let emps = STORE.get('employees', []);
+  emps = emps.filter(e => e.id !== id);
+  STORE.set('employees', emps);
+  let att = STORE.get('attendance', []);
+  att = att.filter(a => a.employeeId !== id);
+  STORE.set('attendance', att);
+  renderEmployees(); renderDashboard();
+  showToast('🗑️ Employee deleted');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DEPARTMENTS
+// ═══════════════════════════════════════════════════════════════════
+function renderDepartments() {
+  const depts = STORE.get('departments', []);
+  const emps = STORE.get('employees', []);
+  document.getElementById('deptTableBody').innerHTML = depts.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;padding:24px;color:#5A6A7A;">No departments</td></tr>'
+    : depts.map(d => {
+      const count = emps.filter(e => e.departmentId === d.id).length;
+      return `<tr><td>${d.id}</td><td><strong>${esc(d.name)}</strong></td><td>${count}</td><td>
+        <button class="btn btn-xs btn-secondary" onclick="editDepartment(${d.id})">✏️</button>
+        <button class="btn btn-xs btn-danger" onclick="deleteDepartment(${d.id})">🗑️</button>
+      </td></tr>`;
+    }).join('');
+}
+
+function openAddDeptModal() {
+  document.getElementById('deptModalTitle').textContent = 'Add Department';
+  document.getElementById('deptEditId').value = '';
+  document.getElementById('deptName').value = '';
+  openModal('dept');
+}
+
+function editDepartment(id) {
+  const depts = STORE.get('departments', []);
+  const d = depts.find(x => x.id === id); if (!d) return;
+  document.getElementById('deptModalTitle').textContent = 'Edit Department';
+  document.getElementById('deptEditId').value = id;
+  document.getElementById('deptName').value = d.name;
+  openModal('dept');
+}
+
+function saveDepartment() {
+  const editId = document.getElementById('deptEditId').value;
+  const name = document.getElementById('deptName').value.trim();
+  if (!name) { showToast('Enter department name', true); return; }
+  let depts = STORE.get('departments', []);
+  if (editId) {
+    const idx = depts.findIndex(d => d.id == editId);
+    if (idx >= 0) { depts[idx].name = name; }
+    STORE.set('departments', depts);
+    showToast('✅ Department updated');
+  } else {
+    if (depts.find(d => d.name.toLowerCase() === name.toLowerCase())) { showToast('Name exists', true); return; }
+    depts.push({ id: uid(), name });
+    STORE.set('departments', depts);
+    showToast('✅ Department added');
+  }
+  closeModal('dept');
+  renderDepartments();
+}
+
+function deleteDepartment(id) {
+  const emps = STORE.get('employees', []);
+  if (emps.some(e => e.departmentId === id)) { showToast('Cannot delete — has employees', true); return; }
+  if (!confirm('Delete this department?')) return;
+  let depts = STORE.get('departments', []);
+  depts = depts.filter(d => d.id !== id);
+  STORE.set('departments', depts);
+  renderDepartments();
+  showToast('🗑️ Department deleted');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SALARY CALCULATIONS
+// ═══════════════════════════════════════════════════════════════════
+function calcSalary(emp) {
+  const sets = STORE.get('settings', { pfPercent: 12, esicPercent: 0.75 });
+  const basic = emp.basic || 0;
+  const da = emp.da || 0;
+  const gross = basic + da;
+  const pf = emp.pfEnabled !== false ? Math.round(basic * (sets.pfPercent || 12) / 100) : 0;
+  const esic = (emp.esicEnabled !== false && gross <= 21000) ? Math.round(gross * (sets.esicPercent || 0.75) / 100) : 0;
+  // PT slab (simplified)
+  let pt = 0;
+  if (gross > 30000) pt = 300;
+  else if (gross > 20000) pt = 200;
+  else if (gross > 15000) pt = 150;
+  const net = gross - pf - esic - pt;
+  return { basic, da, gross, pf, esic, pt, net };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ATTENDANCE
+// ═══════════════════════════════════════════════════════════════════
+function renderAttendance() {
+  const date = document.getElementById('attendanceDate').value || todayStr();
+  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const att = STORE.get('attendance', []);
+  
+  document.getElementById('attendanceTableBody').innerHTML = emps.length === 0
+    ? '<tr><td colspan="6" style="text-align:center;padding:24px;color:#5A6A7A;">No active employees</td></tr>'
+    : emps.map(e => {
+      const rec = att.find(a => a.employeeId === e.id && a.date === date);
+      const status = rec ? rec.status : '—';
+      const time = rec ? rec.time : '—';
+      const badgeCls = status === 'P' ? 'badge-green' : status === 'L' ? 'badge-yellow' : status === 'A' ? 'badge-red' : status === 'HD' ? 'badge-blue' : 'badge-gray';
+      const label = status === 'P' ? 'Present' : status === 'L' ? 'Late' : status === 'A' ? 'Absent' : status === 'HD' ? 'Holiday' : 'Not Marked';
+      return `<tr>
+        <td>${esc(e.code)}</td>
+        <td><strong>${esc(e.name)}</strong></td>
+        <td>${esc(getDeptName(e.departmentId))}</td>
+        <td><span class="badge ${badgeCls}">${label}</span></td>
+        <td>${time}</td>
+        <td>
+          <select class="att-status-select" data-eid="${e.id}" style="padding:4px 6px;border:1px solid #E2E8F0;border-radius:6px;font-size:11px;" onchange="markAttendance(${e.id}, this.value)">
+            <option value="">—</option>
+            <option value="P" ${status==='P'?'selected':''}>Present</option>
+            <option value="L" ${status==='L'?'selected':''}>Late</option>
+            <option value="A" ${status==='A'?'selected':''}>Absent</option>
+            <option value="HD" ${status==='HD'?'selected':''}>Holiday</option>
+          </select>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+function markAttendance(empId, status) {
+  const date = document.getElementById('attendanceDate').value || todayStr();
+  let att = STORE.get('attendance', []);
+  const idx = att.findIndex(a => a.employeeId === empId && a.date === date);
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  if (status) {
+    const rec = { employeeId: empId, date, status, time: timeStr };
+    if (idx >= 0) att[idx] = rec; else att.push(rec);
+  } else {
+    if (idx >= 0) att.splice(idx, 1);
+  }
+  STORE.set('attendance', att);
+  showToast('✅ Attendance updated');
+}
+
+function markAllPresent() {
+  const date = document.getElementById('attendanceDate').value || todayStr();
+  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  let att = STORE.get('attendance', []);
+  const now = new Date(); const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  emps.forEach(e => {
+    const idx = att.findIndex(a => a.employeeId === e.id && a.date === date);
+    const rec = { employeeId: e.id, date, status: 'P', time: timeStr };
+    if (idx >= 0) att[idx] = rec; else att.push(rec);
+  });
+  STORE.set('attendance', att);
+  renderAttendance(); renderDashboard();
+  showToast('✅ All marked Present');
+}
+
+// Monthly Attendance
+function renderMonthlyAttendance() {
+  const month = parseInt(document.getElementById('attMonth').value);
+  const year = parseInt(document.getElementById('attYear').value);
+  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const att = STORE.get('attendance', []).filter(a => {
+    const d = new Date(a.date);
+    return d.getMonth() === month && d.getFullYear() === year;
+  });
+  const totalDays = daysInMonth(month, year);
+  
+  document.getElementById('monthlyAttTableBody').innerHTML = emps.length === 0
+    ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:#5A6A7A;">No data</td></tr>'
+    : emps.map(e => {
+      const empAtt = att.filter(a => a.employeeId === e.id);
+      const p = empAtt.filter(a => a.status === 'P').length;
+      const a = empAtt.filter(a => a.status === 'A').length;
+      const l = empAtt.filter(a => a.status === 'L').length;
+      const h = empAtt.filter(a => a.status === 'HD').length;
+      const total = p + a + l + h;
+      const pct = totalDays > 0 ? Math.round(p / totalDays * 100) : 0;
+      return `<tr>
+        <td><strong>${esc(e.name)}</strong></td>
+        <td><span style="color:#0F9D58;font-weight:600;">${p}</span></td>
+        <td><span style="color:#D32F2F;">${a}</span></td>
+        <td><span style="color:#E65100;">${l}</span></td>
+        <td><span style="color:#1565C0;">${h}</span></td>
+        <td>${total}/${totalDays}</td>
+        <td><span class="badge ${pct >= 75 ? 'badge-green' : pct >= 50 ? 'badge-yellow' : 'badge-red'}">${pct}%</span></td>
+      </tr>`;
+    }).join('');
+}
+
+function computeMonthlyAttendance() {
+  renderMonthlyAttendance();
+  showToast('⟳ Monthly summary refreshed');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SALARY
+// ═══════════════════════════════════════════════════════════════════
+function renderSalary() {
+  const month = parseInt(document.getElementById('salMonth').value);
+  const year = parseInt(document.getElementById('salYear').value);
+  let salary = STORE.get('salary', []).filter(s => s.month === month && s.year === year);
+  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  
+  const totalAmt = salary.reduce((s, r) => s + r.net, 0);
+  const paidAmt = salary.filter(s => s.paid).reduce((s, r) => s + r.net, 0);
+  const unpaidAmt = salary.filter(s => !s.paid).reduce((s, r) => s + r.net, 0);
+  
+  document.getElementById('sTotalSalary').textContent = '₹' + totalAmt.toLocaleString('en-IN');
+  document.getElementById('sTotalPaid').textContent = '₹' + paidAmt.toLocaleString('en-IN');
+  document.getElementById('sTotalUnpaid').textContent = '₹' + unpaidAmt.toLocaleString('en-IN');
+  document.getElementById('sTotalEmp').textContent = salary.length;
+  document.getElementById('sTotalSub').textContent = 'of ' + emps.length + ' active employees';
+  
+  document.getElementById('salaryTableBody').innerHTML = salary.length === 0
+    ? '<tr><td colspan="11" style="text-align:center;padding:24px;color:#5A6A7A;">Click "Generate" for ' + MONTHS[month] + ' ' + year + '</td></tr>'
+    : salary.map(r => {
+      const emp = getEmployee(r.employeeId);
+      return `<tr>
+        <td>${emp ? esc(emp.code) : '—'}</td>
+        <td><strong>${emp ? esc(emp.name) : '—'}</strong></td>
+        <td>₹${r.basic.toLocaleString('en-IN')}</td>
+        <td>₹${r.da.toLocaleString('en-IN')}</td>
+        <td>₹${r.gross.toLocaleString('en-IN')}</td>
+        <td>₹${r.pf.toLocaleString('en-IN')}</td>
+        <td>₹${r.esic.toLocaleString('en-IN')}</td>
+        <td>₹${r.pt.toLocaleString('en-IN')}</td>
+        <td><strong>₹${r.net.toLocaleString('en-IN')}</strong></td>
+        <td><span class="badge ${r.paid ? 'badge-green' : 'badge-yellow'}">${r.paid ? 'Paid' : 'Unpaid'}</span></td>
+        <td>${r.paid ? '' : '<button class="btn btn-xs btn-success" onclick="togglePaid('+r.id+')">✓ Pay</button>'}</td>
+      </tr>`;
+    }).join('');
+}
+
+function generateSalary() {
+  const month = parseInt(document.getElementById('salMonth').value);
+  const year = parseInt(document.getElementById('salYear').value);
+  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  let salary = STORE.get('salary', []);
+  
+  // Remove existing for this month
+  salary = salary.filter(s => !(s.month === month && s.year === year));
+  
+  emps.forEach(e => {
+    const c = calcSalary(e);
+    salary.push({
+      id: uid(), employeeId: e.id, month, year,
+      basic: c.basic, da: c.da, gross: c.gross,
+      pf: c.pf, esic: c.esic, pt: c.pt,
+      net: c.net, paid: false, generatedDate: todayStr()
     });
+  });
+  STORE.set('salary', salary);
+  renderSalary(); renderDashboard();
+  showToast('⚡ Salary generated for ' + emps.length + ' employees');
+}
 
-    // ─── PAGE NAV ──────────────────────────────────
-    function showPage(pageId, navItem) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        if (navItem) navItem.classList.add('active');
+function togglePaid(id) {
+  let salary = STORE.get('salary', []);
+  const idx = salary.findIndex(s => s.id === id);
+  if (idx >= 0) { salary[idx].paid = !salary[idx].paid; }
+  STORE.set('salary', salary);
+  renderSalary(); renderDashboard();
+  showToast('✅ Status updated');
+}
 
-        const titles = { 'dashboard-page': 'Dashboard', 'employees-page': 'Employees', 'attendance-page': 'Attendance', 'salary-page': 'Salary', 'payslip-page': 'Payslip' };
-        document.getElementById('pageTitle').textContent = titles[pageId] || 'Dashboard';
-        if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
-    }
+function togglePaidAll() {
+  const month = parseInt(document.getElementById('salMonth').value);
+  const year = parseInt(document.getElementById('salYear').value);
+  let salary = STORE.get('salary', []);
+  let changed = 0;
+  salary = salary.map(s => {
+    if (s.month === month && s.year === year && !s.paid) { changed++; return { ...s, paid: true }; }
+    return s;
+  });
+  STORE.set('salary', salary);
+  renderSalary(); renderDashboard();
+  showToast('✅ ' + changed + ' salaries marked paid');
+}
 
-    // ─── RENDER ALL ────────────────────────────────
-    function renderAll() {
-        renderDashboard();
-        renderEmployees();
-        renderAttendance();
-        renderSalary();
-        renderPayslip();
-    }
+// ═══════════════════════════════════════════════════════════════════
+// PAYSLIP
+// ═══════════════════════════════════════════════════════════════════
+function renderPayslipList() {
+  const month = parseInt(document.getElementById('psMonth').value);
+  const year = parseInt(document.getElementById('psYear').value);
+  const salary = STORE.get('salary', []).filter(s => s.month === month && s.year === year);
+  const payslips = STORE.get('payslips', []);
+  
+  document.getElementById('payslipTableBody').innerHTML = salary.length === 0
+    ? '<tr><td colspan="6" style="text-align:center;padding:24px;color:#5A6A7A;">Generate salary first</td></tr>'
+    : salary.map(r => {
+      const emp = getEmployee(r.employeeId);
+      const hasPs = payslips.some(p => p.employeeId === r.employeeId && p.month === month && p.year === year);
+      return `<tr>
+        <td>${emp ? esc(emp.code) : '—'}</td>
+        <td><strong>${emp ? esc(emp.name) : '—'}</strong></td>
+        <td>${emp ? esc(getDeptName(emp.departmentId)) : '—'}</td>
+        <td><strong>₹${r.net.toLocaleString('en-IN')}</strong></td>
+        <td><span class="badge ${hasPs ? 'badge-green' : 'badge-yellow'}">${hasPs ? 'Generated' : 'Pending'}</span></td>
+        <td>
+          <button class="btn btn-xs btn-primary" onclick="viewPayslip(${r.employeeId},${month},${year})">📄 View</button>
+          ${hasPs ? '' : '<button class="btn btn-xs btn-secondary" onclick="generateSinglePayslip('+r.employeeId+','+month+','+year+')">Generate</button>'}
+        </td>
+      </tr>`;
+    }).join('');
+}
 
-    // ─── DASHBOARD ─────────────────────────────────
-    function renderDashboard() {
-        const total = employees.length;
-        const present = Object.values(attendanceRecords).filter(a => a.status === 'P').length;
-        document.getElementById('kpiTotalEmployees').textContent = total;
-        document.getElementById('kpiPresentToday').textContent = present;
-        document.getElementById('kpiPresentSub').textContent = total > 0 ? Math.round(present/total*100) + '% attendance' : '0% attendance';
-        document.getElementById('kpiPendingPayslips').textContent = Math.max(0, total - payslipRecords.length);
-        const netPayroll = employees.reduce((sum, e) => sum + getNet(e.basic, e.da, e.pf, e.esic, e.pt), 0);
-        document.getElementById('kpiNetPayroll').textContent = '₹' + netPayroll.toLocaleString('en-IN');
+function generateSinglePayslip(empId, month, year) {
+  let payslips = STORE.get('payslips', []);
+  if (!payslips.some(p => p.employeeId === empId && p.month === month && p.year === year)) {
+    payslips.push({ id: uid(), employeeId: empId, month, year, generatedDate: todayStr() });
+    STORE.set('payslips', payslips);
+  }
+  renderPayslipList();
+  showToast('📄 Payslip generated');
+}
 
-        const tbody = document.getElementById('recentEmployeesTable');
-        tbody.innerHTML = employees.slice(-5).reverse().map(e =>
-            `<tr><td>${e.id}</td><td><strong>${e.name}</strong></td><td>${e.dept}</td><td>${e.designation}</td><td><span class="badge badge-success">${e.status}</span></td></tr>`
-        ).join('');
+function generateAllPayslips() {
+  const month = parseInt(document.getElementById('psMonth').value);
+  const year = parseInt(document.getElementById('psYear').value);
+  const salary = STORE.get('salary', []).filter(s => s.month === month && s.year === year);
+  let payslips = STORE.get('payslips', []);
+  let count = 0;
+  salary.forEach(r => {
+    if (!payslips.some(p => p.employeeId === r.employeeId && p.month === month && p.year === year)) {
+      payslips.push({ id: uid(), employeeId: r.employeeId, month, year, generatedDate: todayStr() });
+      count++;
     }
+  });
+  STORE.set('payslips', payslips);
+  renderPayslipList();
+  showToast('📄 ' + count + ' payslips generated');
+}
 
-    // ─── EMPLOYEES ─────────────────────────────────
-    function renderEmployees(filter) {
-        const list = filter ? employees.filter(e =>
-            e.id.toLowerCase().includes(filter) || e.name.toLowerCase().includes(filter) || e.dept.toLowerCase().includes(filter)
-        ) : employees;
-        const tbody = document.getElementById('employeesTableBody');
-        tbody.innerHTML = list.map(e =>
-            `<tr><td>${e.id}</td><td><strong>${e.name}</strong></td><td>${e.dept}</td><td>${e.subDept}</td><td>${e.designation}</td><td><span class="badge badge-success">${e.status}</span></td><td><button class="btn btn-sm btn-secondary" onclick="deleteEmployee('${e.id}')">Delete</button></td></tr>`
-        ).join('');
-    }
-    function filterEmployees(val) { renderEmployees(val.toLowerCase()); }
+function viewPayslip(empId, month, year) {
+  const emp = getEmployee(empId);
+  const salary = STORE.get('salary', []).find(s => s.employeeId === empId && s.month === month && s.year === year);
+  if (!emp || !salary) { showToast('Salary record not found', true); return; }
+  const sets = STORE.get('settings', { companyName: 'MANIT SOLUTIONS', address: 'India' });
+  
+  document.getElementById('psPrintHeader').innerHTML = `<h2>${esc(sets.companyName || 'MANIT SOLUTIONS')}</h2><p>Salary Payslip — ${MONTHS[month]} ${year}</p>`;
+  
+  document.getElementById('psPrintBody').innerHTML = `
+    <div class="row"><span class="label">Employee</span><span><strong>${esc(emp.name)}</strong> (${esc(emp.code)})</span></div>
+    <div class="row"><span class="label">Department</span><span>${esc(getDeptName(emp.departmentId))}</span></div>
+    <div class="row"><span class="label">Designation</span><span>${esc(emp.designation)}</span></div>
+    <div class="row"><span class="label">PAN / Bank</span><span>—</span></div>
+    <div style="height:12px;"></div>
+    <div class="row"><span class="label">Basic Salary</span><span>₹${salary.basic.toLocaleString('en-IN')}</span></div>
+    <div class="row"><span class="label">Dearness Allowance (DA)</span><span>₹${salary.da.toLocaleString('en-IN')}</span></div>
+    <div class="row" style="font-weight:600;"><span class="label">Gross Salary</span><span>₹${salary.gross.toLocaleString('en-IN')}</span></div>
+    <div style="height:8px;"></div>
+    <div class="row"><span class="label">Provident Fund (PF)</span><span>− ₹${salary.pf.toLocaleString('en-IN')}</span></div>
+    <div class="row"><span class="label">ESIC</span><span>− ₹${salary.esic.toLocaleString('en-IN')}</span></div>
+    <div class="row"><span class="label">Professional Tax (PT)</span><span>− ₹${salary.pt.toLocaleString('en-IN')}</span></div>
+    <div class="row total"><span class="label">Net Salary</span><span>₹${salary.net.toLocaleString('en-IN')}</span></div>
+    <div style="height:8px;"></div>
+    <div class="row"><span class="label">Status</span><span>${salary.paid ? '✅ Paid' : '⏳ Unpaid'}</span></div>
+    <div class="row"><span class="label">Generated On</span><span>${salary.generatedDate || todayStr()}</span></div>
+  `;
+  openModal('payslip');
+  
+  // Mark as generated
+  let payslips = STORE.get('payslips', []);
+  if (!payslips.some(p => p.employeeId === empId && p.month === month && p.year === year)) {
+    payslips.push({ id: uid(), employeeId: empId, month, year, generatedDate: todayStr() });
+    STORE.set('payslips', payslips);
+  }
+  renderPayslipList();
+}
 
-    function openAddEmployeeModal() {
-        document.getElementById('addEmployeeModal').classList.add('open');
-    }
-    function closeAddEmployeeModal() {
-        document.getElementById('addEmployeeModal').classList.remove('open');
-    }
-    function saveEmployee() {
-        const id = document.getElementById('empId').value.trim();
-        const name = document.getElementById('empName').value.trim();
-        if (!id || !name) { showToast('Please fill ID and Name'); return; }
-        employees.push({
-            id, name,
-            dept: document.getElementById('empDept').value,
-            subDept: document.getElementById('empSubDept').value.trim(),
-            designation: document.getElementById('empDesignation').value.trim(),
-            status: document.getElementById('empStatus').value,
-            basic: 30000, da: 6000, pf: 3600, esic: 1350, pt: 200
-        });
-        attendanceRecords[id] = { status: 'P', time: '09:00 AM' };
-        closeAddEmployeeModal();
-        renderAll();
-        showToast('✅ Employee ' + name + ' added successfully!');
-        document.getElementById('empId').value = ''; document.getElementById('empName').value = '';
-        document.getElementById('empSubDept').value = ''; document.getElementById('empDesignation').value = '';
-    }
-    function deleteEmployee(id) {
-        if (!confirm('Delete ' + id + '?')) return;
-        employees = employees.filter(e => e.id !== id);
-        renderAll();
-        showToast('🗑️ Employee deleted');
-    }
+// ═══════════════════════════════════════════════════════════════════
+// USERS
+// ═══════════════════════════════════════════════════════════════════
+function renderUsers() {
+  const users = STORE.get('users', []);
+  const currentUser = localStorage.getItem('pw_user');
+  document.getElementById('usersTableBody').innerHTML = users.map(u =>
+    `<tr>
+      <td>${esc(u.username)}</td>
+      <td>${esc(u.name)}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-blue':'badge-gray'}">${esc(u.role)}</span></td>
+      <td>
+        ${u.username === 'admin' ? '<span style="color:#5A6A7A;font-size:11px;">(built-in)</span>'
+          : '<button class="btn btn-xs btn-secondary" onclick="editUser('+u.id+')">✏️</button> ' +
+            '<button class="btn btn-xs btn-danger" onclick="deleteUser('+u.id+')">🗑️</button>'}
+      </td>
+    </tr>`
+  ).join('');
+}
 
-    // ─── ATTENDANCE ────────────────────────────────
-    function renderAttendance() {
-        const tbody = document.getElementById('attendanceTableBody');
-        tbody.innerHTML = employees.map(e => {
-            const rec = attendanceRecords[e.id] || { status: 'P', time: '09:00 AM' };
-            const badge = rec.status === 'P' ? 'badge-success' : rec.status === 'L' ? 'badge-warning' : 'badge-danger';
-            const label = rec.status === 'P' ? 'Present' : rec.status === 'L' ? 'Late' : 'Absent';
-            return `<tr><td>${e.id}</td><td><strong>${e.name}</strong></td><td>${e.dept}</td><td><span class="badge ${badge}">${label}</span></td><td>${rec.time}</td></tr>`;
-        }).join('');
-    }
-    function markAllPresent() {
-        employees.forEach(e => {
-            attendanceRecords[e.id] = { status: 'P', time: '09:00 AM' };
-        });
-        renderAttendance();
-        renderDashboard();
-        showToast('✅ All employees marked Present!');
-    }
+function openAddUserModal() {
+  document.getElementById('userModalTitle').textContent = 'Add User';
+  document.getElementById('userEditId').value = '';
+  document.getElementById('userUsername').value = '';
+  document.getElementById('userPassword').value = '';
+  document.getElementById('userDisplayName').value = '';
+  document.getElementById('userRole').value = 'user';
+  openModal('user');
+}
 
-    // ─── SALARY ────────────────────────────────────
-    function generateSalary() {
-        salaryRecords = employees.map(e => {
-            const gross = getGross(e.basic, e.da);
-            const net = getNet(e.basic, e.da, e.pf, e.esic, e.pt);
-            return { ...e, gross, net, paid: false };
-        });
-        renderSalary();
-        renderDashboard();
-        showToast('⚡ Salary generated for ' + employees.length + ' employees');
-    }
-    function renderSalary() {
-        const paid = salaryRecords.filter(s => s.paid);
-        const unpaid = salaryRecords.filter(s => !s.paid);
-        document.getElementById('sTotalSalary').textContent = '₹' + salaryRecords.reduce((s, r) => s + r.net, 0).toLocaleString('en-IN');
-        document.getElementById('sTotalPaid').textContent = '₹' + paid.reduce((s, r) => s + r.net, 0).toLocaleString('en-IN');
-        document.getElementById('sTotalUnpaid').textContent = '₹' + unpaid.reduce((s, r) => s + r.net, 0).toLocaleString('en-IN');
-        document.getElementById('sTotalEmp').textContent = employees.length;
+function editUser(id) {
+  const users = STORE.get('users', []);
+  const u = users.find(x => x.id === id); if (!u) return;
+  document.getElementById('userModalTitle').textContent = 'Edit User';
+  document.getElementById('userEditId').value = id;
+  document.getElementById('userUsername').value = u.username;
+  document.getElementById('userPassword').value = u.password;
+  document.getElementById('userDisplayName').value = u.name;
+  document.getElementById('userRole').value = u.role;
+  openModal('user');
+}
 
-        const tbody = document.getElementById('salaryTableBody');
-        if (salaryRecords.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:#5A6A7A;">Click "Generate Salary" to create records</td></tr>';
-            return;
-        }
-        tbody.innerHTML = salaryRecords.map(r =>
-            `<tr>
-                <td><strong>${r.name}</strong></td>
-                <td>₹${r.basic.toLocaleString('en-IN')}</td>
-                <td>₹${r.da.toLocaleString('en-IN')}</td>
-                <td>₹${r.gross.toLocaleString('en-IN')}</td>
-                <td>₹${r.pf.toLocaleString('en-IN')}</td>
-                <td>₹${r.esic.toLocaleString('en-IN')}</td>
-                <td>₹${r.pt.toLocaleString('en-IN')}</td>
-                <td><strong>₹${r.net.toLocaleString('en-IN')}</strong></td>
-                <td><span class="badge ${r.paid ? 'badge-success' : 'badge-warning'}">${r.paid ? 'Paid' : 'Unpaid'}</span></td>
-            </tr>`
-        ).join('');
-    }
+function saveUser() {
+  const editId = document.getElementById('userEditId').value;
+  const username = document.getElementById('userUsername').value.trim();
+  const password = document.getElementById('userPassword').value.trim();
+  const name = document.getElementById('userDisplayName').value.trim();
+  if (!username || !password || !name) { showToast('Fill all fields', true); return; }
+  let users = STORE.get('users', []);
+  if (editId) {
+    const idx = users.findIndex(u => u.id == editId);
+    if (idx >= 0) { users[idx] = { ...users[idx], username, password, name, role: document.getElementById('userRole').value }; }
+    STORE.set('users', users);
+    showToast('✅ User updated');
+  } else {
+    if (users.find(u => u.username === username)) { showToast('Username exists', true); return; }
+    users.push({ id: uid(), username, password, name, role: document.getElementById('userRole').value });
+    STORE.set('users', users);
+    showToast('✅ User added');
+  }
+  closeModal('user');
+  renderUsers();
+}
 
-    // ─── PAYSLIP ───────────────────────────────────
-    function renderPayslip() {
-        const tbody = document.getElementById('payslipTableBody');
-        if (salaryRecords.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#5A6A7A;">Generate salary first</td></tr>';
-            return;
-        }
-        tbody.innerHTML = salaryRecords.map(r => {
-            const hasPayslip = payslipRecords.includes(r.id);
-            return `<tr>
-                <td>${r.id}</td>
-                <td><strong>${r.name}</strong></td>
-                <td>${r.dept}</td>
-                <td><strong>₹${r.net.toLocaleString('en-IN')}</strong></td>
-                <td>${hasPayslip
-                    ? '<span class="badge badge-success">Generated</span>'
-                    : '<button class="btn btn-sm btn-primary" onclick="generatePayslip(\''+r.id+'\')">Generate</button>'}
-                </td>
-            </tr>`;
-        }).join('');
-    }
-    function generatePayslip(id) {
-        if (!payslipRecords.includes(id)) payslipRecords.push(id);
-        renderPayslip();
-        renderDashboard();
-        showToast('📄 Payslip generated for ' + id);
-    }
-    function generateAllPayslips() {
-        salaryRecords.forEach(r => {
-            if (!payslipRecords.includes(r.id)) payslipRecords.push(r.id);
-        });
-        renderPayslip();
-        renderDashboard();
-        showToast('📄 All payslips generated!');
-    }
+function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  let users = STORE.get('users', []);
+  const u = users.find(x => x.id === id);
+  if (u && u.username === 'admin') { showToast('Cannot delete admin', true); return; }
+  users = users.filter(u => u.id !== id);
+  STORE.set('users', users);
+  renderUsers();
+  showToast('🗑️ User deleted');
+}
 
-    // ─── LOGOUT ────────────────────────────────────
-    function handleLogout() {
-        localStorage.removeItem('payroll_logged_in');
-        localStorage.removeItem('payroll_user');
-        window.location.href = 'login.html';
-    }
+// ═══════════════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════════════
+function loadSettings() {
+  const s = STORE.get('settings', {});
+  document.getElementById('setCompanyName').value = s.companyName || '';
+  document.getElementById('setAddress').value = s.address || '';
+  document.getElementById('setPhone').value = s.phone || '';
+  document.getElementById('setEmail').value = s.email || '';
+  document.getElementById('setPFPercent').value = s.pfPercent || 12;
+  document.getElementById('setESICPercent').value = s.esicPercent || 0.75;
+}
 
-    // ─── TOAST ─────────────────────────────────────
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.textContent = msg;
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 3000);
-    }
+function saveSettings() {
+  const s = {
+    companyName: document.getElementById('setCompanyName').value.trim(),
+    address: document.getElementById('setAddress').value.trim(),
+    phone: document.getElementById('setPhone').value.trim(),
+    email: document.getElementById('setEmail').value.trim(),
+    pfPercent: parseFloat(document.getElementById('setPFPercent').value) || 12,
+    esicPercent: parseFloat(document.getElementById('setESICPercent').value) || 0.75,
+  };
+  STORE.set('settings', s);
+  showToast('💾 Settings saved');
+}
+
+// ─── UTILITIES ──────────────────────────
+function esc(s) { if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  if (!requireAuth()) return;
+  
+  document.getElementById('currentDate').textContent =
+    'TODAY: ' + new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  
+  document.getElementById('attendanceDate').value = todayStr();
+  
+  populateMonthYear('attMonth', 'attYear');
+  populateMonthYear('salMonth', 'salYear');
+  populateMonthYear('psMonth', 'psYear');
+  
+  renderDashboard();
+});
 </script>
 </body>
 </html>
