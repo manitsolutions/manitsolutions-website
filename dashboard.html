@@ -272,7 +272,7 @@ tr:last-child td { border-bottom: none; }
     <!-- ══ PAGE: EMPLOYEES ══ -->
     <div class="page" id="page-employees">
       <div class="card">
-        <div class="card-header"><h3>Employee Directory</h3><div class="actions"><button class="btn btn-primary" onclick="openModal('employeeModal')">+ Add Employee</button></div></div>
+        <div class="card-header"><h3>Employee Directory</h3><div class="actions"><button class="btn btn-primary" onclick="openAddEmployeeModal()">+ Add Employee</button></div></div>
         <div class="search-bar">
           <input type="text" placeholder="Search name, ID, department..." oninput="renderEmployees(this.value)" />
           <select onchange="renderEmployees(document.querySelector('#page-employees .search-bar input').value)" id="empDeptFilter"><option value="">All Depts</option></select>
@@ -284,7 +284,7 @@ tr:last-child td { border-bottom: none; }
     <!-- ══ PAGE: DEPARTMENTS ══ -->
     <div class="page" id="page-departments">
       <div class="card">
-        <div class="card-header"><h3>Departments</h3><div class="actions"><button class="btn btn-primary" onclick="openModal('deptModal')">+ Add Department</button></div></div>
+        <div class="card-header"><h3>Departments</h3><div class="actions"><button class="btn btn-primary" onclick="openAddDeptModal()">+ Add Department</button></div></div>
         <table><thead><tr><th>ID</th><th>Name</th><th>Employees</th><th>Action</th></tr></thead><tbody id="deptTableBody"></tbody></table>
       </div>
     </div>
@@ -354,7 +354,7 @@ tr:last-child td { border-bottom: none; }
     <!-- ══ PAGE: USERS ══ -->
     <div class="page" id="page-users">
       <div class="card">
-        <div class="card-header"><h3>System Users</h3><div class="actions"><button class="btn btn-primary" onclick="openModal('userModal')">+ Add User</button></div></div>
+        <div class="card-header"><h3>System Users</h3><div class="actions"><button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button></div></div>
         <table><thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Action</th></tr></thead><tbody id="usersTableBody"></tbody></table>
       </div>
     </div>
