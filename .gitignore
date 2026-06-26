@@ -4,3 +4,10 @@ PayrollWeb/bin/
 PayrollWeb/obj/
 PayrollWeb/*.user
 PayrollWeb/app.db
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
