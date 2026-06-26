@@ -152,6 +152,8 @@ tr:last-child td { border-bottom: none; }
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #1A4DFF; }
 .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.form-section { border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 14px; background: #FAFBFC; }
+.form-section h4 { font-size: 12px; font-weight: 700; color: #0F1B3D; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #E2E8F0; text-transform: uppercase; letter-spacing: 0.4px; }
 /* ───────── MODAL ───────── */
 .modal-overlay {
   display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -382,23 +384,130 @@ tr:last-child td { border-bottom: none; }
 
 <!-- ═══ MODAL: EMPLOYEE ═══ -->
 <div class="modal-overlay" id="modal-employee">
-  <div class="modal">
+  <div class="modal" style="max-width:850px;">
     <h3 id="empModalTitle">Add Employee</h3>
     <input type="hidden" id="empEditId" />
-    <div class="form-grid">
-      <div class="form-group"><label>Employee Code</label><input type="text" id="empCode" placeholder="EMP001" /></div>
-      <div class="form-group"><label>Full Name</label><input type="text" id="empName" placeholder="Full name" /></div>
-      <div class="form-group"><label>Department</label><select id="empDepartment"></select></div>
-      <div class="form-group"><label>Designation</label><input type="text" id="empDesignation" placeholder="Designation" /></div>
-      <div class="form-group"><label>Basic Salary (₹)</label><input type="number" id="empBasic" value="25000" /></div>
-      <div class="form-group"><label>DA (₹)</label><input type="number" id="empDA" value="5000" /></div>
-      <div class="form-group"><label><input type="checkbox" id="empPF" checked /> Enable PF</label></div>
-      <div class="form-group"><label><input type="checkbox" id="empESIC" checked /> Enable ESIC</label></div>
-      <div class="form-group"><label>Status</label><select id="empStatus"><option>Active</option><option>Inactive</option></select></div>
+
+    <!-- SECTION 1: Employment Details -->
+    <div class="form-section">
+      <h4>📋 Employment Details</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>Employee Code</label><input type="text" id="empCode" placeholder="Auto" /></div>
+        <div class="form-group"><label>Status</label><select id="empStatus"><option>Active</option><option>Inactive</option></select></div>
+        <div class="form-group"><label>Joining Date</label><input type="date" id="empJoiningDate" /></div>
+        <div class="form-group"><label>Department *</label><select id="empDepartment"></select></div>
+        <div class="form-group"><label>Sub Department *</label><select id="empSubDepartment"><option value="">—</option></select></div>
+        <div class="form-group"><label>Designation</label><input type="text" id="empDesignation" placeholder="Designation" /></div>
+        <div class="form-group"><label>PF No</label><input type="text" id="empPfNo" placeholder="PF Number" /></div>
+        <div class="form-group"><label>UAN No</label><input type="text" id="empUanNo" placeholder="UAN Number" /></div>
+        <div class="form-group"><label>ESIC No</label><input type="text" id="empEsicNo" placeholder="ESIC Number" /></div>
+      </div>
     </div>
+
+    <!-- SECTION 2: Personal Details -->
+    <div class="form-section">
+      <h4>👤 Personal Details</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>First Name *</label><input type="text" id="empFirstName" placeholder="First name" /></div>
+        <div class="form-group"><label>Middle Name</label><input type="text" id="empMiddleName" placeholder="Middle name" /></div>
+        <div class="form-group"><label>Last Name *</label><input type="text" id="empLastName" placeholder="Last name" /></div>
+        <div class="form-group"><label>Name as per Aadhar *</label><input type="text" id="empAadharName" /></div>
+        <div class="form-group"><label>Father Name *</label><input type="text" id="empFatherName" /></div>
+        <div class="form-group"><label>Mother Name</label><input type="text" id="empMotherName" /></div>
+        <div class="form-group"><label>Gender *</label><select id="empGender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+        <div class="form-group"><label>Marital Status *</label><select id="empMaritalStatus"><option value="">Select</option><option>Single</option><option>Married</option><option>Other</option></select></div>
+        <div class="form-group"><label>Religion</label><input type="text" id="empReligion" placeholder="Religion" /></div>
+        <div class="form-group"><label>Date of Birth *</label><input type="date" id="empDob" /></div>
+        <div class="form-group"><label>Blood Group</label><select id="empBloodGroup"><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+        <div class="form-group"><label>Category</label><select id="empCategory"><option value="">Select</option><option>General</option><option>OBC</option><option>SC</option><option>ST</option></select></div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: Contact & Address -->
+    <div class="form-section">
+      <h4>📞 Contact &amp; Address</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>Contact No *</label><input type="text" id="empContactNo" placeholder="Mobile number" /></div>
+        <div class="form-group"><label>Emergency Contact</label><input type="text" id="empEmergencyContact" /></div>
+        <div class="form-group"><label>Email</label><input type="email" id="empEmail" placeholder="Email" /></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Current Address</label><textarea id="empCurrentAddress" rows="2" style="width:100%;padding:9px 11px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+        <div class="form-group">
+          <label><input type="checkbox" id="empSameAddress" onchange="copyAddress()" /> Same as Current Address</label>
+          <textarea id="empPermanentAddress" rows="2" style="width:100%;padding:9px 11px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;outline:none;resize:vertical;margin-top:4px;" placeholder="Permanent Address"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: Identity & Documents -->
+    <div class="form-section">
+      <h4>🪪 Identity &amp; Documents</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>Aadhar No *</label><input type="text" id="empAadharNo" placeholder="12-digit Aadhar" /></div>
+        <div class="form-group"><label>PAN No</label><input type="text" id="empPanNo" /></div>
+        <div class="form-group"><label>Voter ID</label><input type="text" id="empVoterId" /></div>
+        <div class="form-group"><label>Driving Licence</label><input type="text" id="empDrivingLicence" /></div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: Education -->
+    <div class="form-section">
+      <h4>🎓 Education</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>Highest Education</label><input type="text" id="empQualification" placeholder="e.g. B.Tech" /></div>
+        <div class="form-group"><label>University / Institute</label><input type="text" id="empUniversity" /></div>
+        <div class="form-group"><label>Passing Year</label><input type="text" id="empPassingYear" placeholder="e.g. 2020" /></div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: Experience -->
+    <div class="form-section">
+      <h4>💼 Experience</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>Previous Company</label><input type="text" id="empPrevCompany" /></div>
+        <div class="form-group"><label>Designation</label><input type="text" id="empPrevDesignation" /></div>
+        <div class="form-group" style="display:flex;gap:8px;align-items:flex-end;">
+          <div style="flex:1;"><label>Total Exp (Years)</label><input type="number" id="empExpYears" min="0" /></div>
+          <div style="flex:1;"><label>Months</label><input type="number" id="empExpMonths" min="0" max="11" /></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 7: Reference -->
+    <div class="form-section">
+      <h4>📎 Reference</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>Reference Name</label><input type="text" id="empRefName" /></div>
+        <div class="form-group"><label>Relation</label><input type="text" id="empRefRelation" /></div>
+        <div class="form-group"><label>Contact</label><input type="text" id="empRefContact" /></div>
+      </div>
+    </div>
+
+    <!-- SECTION 8: Bank Details -->
+    <div class="form-section">
+      <h4>🏦 Bank Details</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>Bank Name *</label><input type="text" id="empBankName" /></div>
+        <div class="form-group"><label>Account No *</label><input type="text" id="empAccountNo" /></div>
+        <div class="form-group"><label>IFSC Code *</label><input type="text" id="empIfscCode" /></div>
+      </div>
+      <div class="form-group"><label>Branch / Other Details</label><textarea id="empBankDetails" rows="2" style="width:100%;padding:9px 11px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+    </div>
+
+    <!-- SECTION 9: Salary Details -->
+    <div class="form-section">
+      <h4>💰 Salary Details</h4>
+      <div class="form-grid col3">
+        <div class="form-group"><label>Basic Salary *</label><input type="number" id="empBasic" value="25000" /></div>
+        <div class="form-group"><label>DA / WA *</label><input type="number" id="empDA" value="5000" /></div>
+        <div class="form-group"><label>HRA</label><input type="number" id="empHra" value="0" /></div>
+      </div>
+    </div>
+
     <div class="form-actions">
       <button class="btn btn-secondary" onclick="closeModal('employee')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">💾 Save Employee</button>
     </div>
   </div>
 </div>
@@ -471,16 +580,27 @@ function seedData() {
     { id: uid(), name: 'Operations' },
   ];
   STORE.set('departments', depts);
+  const subdepts = [
+    { id: uid(), name: 'Software', departmentId: depts[0].id },
+    { id: uid(), name: 'Hardware', departmentId: depts[0].id },
+    { id: uid(), name: 'Recruitment', departmentId: depts[1].id },
+    { id: uid(), name: 'Payroll', departmentId: depts[2].id },
+    { id: uid(), name: 'Accounts', departmentId: depts[2].id },
+    { id: uid(), name: 'Digital', departmentId: depts[3].id },
+    { id: uid(), name: 'Admin', departmentId: depts[4].id },
+  ];
+  STORE.set('subdepartments', subdepts);
   STORE.set('users', [
     { id: uid(), username: 'admin', password: 'admin123', name: 'Administrator', role: 'admin' },
   ]);
   STORE.set('settings', { companyName: 'MANIT SOLUTIONS', address: 'India', phone: '+91-XXXXXXXXXX', email: 'info@manitsolutions.com', pfPercent: 12, esicPercent: 0.75 });
+  const now = todayStr();
   const emps = [
-    { id: uid(), code: 'EMP001', name: 'Rahul Sharma', departmentId: depts[0].id, designation: 'Senior Developer', basic: 45000, da: 9000, pfEnabled: true, esicEnabled: true, status: 'Active' },
-    { id: uid(), code: 'EMP002', name: 'Priya Patel',   departmentId: depts[1].id, designation: 'HR Manager',    basic: 55000, da: 11000, pfEnabled: true, esicEnabled: true, status: 'Active' },
-    { id: uid(), code: 'EMP003', name: 'Amit Verma',    departmentId: depts[2].id, designation: 'Accountant',    basic: 35000, da: 7000, pfEnabled: true, esicEnabled: true, status: 'Active' },
-    { id: uid(), code: 'EMP004', name: 'Sneha Gupta',   departmentId: depts[3].id, designation: 'Marketing Lead', basic: 42000, da: 8400, pfEnabled: true, esicEnabled: true, status: 'Active' },
-    { id: uid(), code: 'EMP005', name: 'Vikram Singh',  departmentId: depts[4].id, designation: 'Operations Head',basic: 60000, da: 12000, pfEnabled: true, esicEnabled: true, status: 'Active' },
+    { id: uid(), code:'EMP001', firstName:'Rahul', middleName:'Kumar', lastName:'Sharma', name:'Rahul Kumar Sharma', nameAsPerAadhar:'Rahul Sharma', fatherName:'Mr. Sharma', motherName:'Mrs. Sharma', gender:'Male', maritalStatus:'Married', religion:'Hindu', dateOfBirth:'1990-05-15', bloodGroup:'B+', category:'General', departmentId:depts[0].id, subDepartmentId:subdepts[0].id, designation:'Senior Developer', joiningDate:'2020-01-15', mobileNumber:'9876543210', emergencyContact:'9876543211', emailId:'rahul@manitsolutions.com', currentAddress:'Mumbai, Maharashtra', permanentAddress:'Delhi', aadharNumber:'123456789012', panNumber:'ABCDE1234F', voterId:'', drivingLicence:'', pfNumber:'PF/12345', uanNumber:'UAN/12345', esicNumber:'ESIC/12345', qualification:'B.Tech', university:'Mumbai University', passingYear:'2012', previousCompany:'TechCorp', prevDesignation:'Developer', totalExperience:'10 Years 0 Months', expYears:'10', expMonths:'0', nomineeName:'Priya Sharma', nomineeRelation:'Spouse', nomineeContact:'9876543211', bankName:'SBI', accountNumber:'12345678901', ifscCode:'SBIN0001234', bankBranchDetails:'Andheri Branch', basic:45000, da:9000, hra:8000, status:'Active' },
+    { id: uid(), code:'EMP002', firstName:'Priya', middleName:'', lastName:'Patel', name:'Priya Patel', nameAsPerAadhar:'Priya Patel', fatherName:'Mr. Patel', motherName:'Mrs. Patel', gender:'Female', maritalStatus:'Single', religion:'Hindu', dateOfBirth:'1992-08-22', bloodGroup:'A+', category:'General', departmentId:depts[1].id, subDepartmentId:subdepts[2].id, designation:'HR Manager', joiningDate:'2021-03-01', mobileNumber:'9876543212', emergencyContact:'9876543213', emailId:'priya@manitsolutions.com', currentAddress:'Pune, Maharashtra', permanentAddress:'Pune', aadharNumber:'234567890123', panNumber:'FGHIJ5678K', voterId:'', drivingLicence:'', pfNumber:'PF/12346', uanNumber:'UAN/12346', esicNumber:'ESIC/12346', qualification:'MBA', university:'Pune University', passingYear:'2014', previousCompany:'HRWorld', prevDesignation:'HR Executive', totalExperience:'8 Years 0 Months', expYears:'8', expMonths:'0', nomineeName:'', nomineeRelation:'', nomineeContact:'', bankName:'HDFC', accountNumber:'23456789012', ifscCode:'HDFC0005678', bankBranchDetails:'Koregaon Park', basic:55000, da:11000, hra:10000, status:'Active' },
+    { id: uid(), code:'EMP003', firstName:'Amit', middleName:'', lastName:'Verma', name:'Amit Verma', nameAsPerAadhar:'Amit Verma', fatherName:'Mr. Verma', motherName:'Mrs. Verma', gender:'Male', maritalStatus:'Married', religion:'Hindu', dateOfBirth:'1988-11-10', bloodGroup:'O+', category:'OBC', departmentId:depts[2].id, subDepartmentId:subdepts[3].id, designation:'Accountant', joiningDate:'2019-06-01', mobileNumber:'9876543214', emergencyContact:'9876543215', emailId:'amit@manitsolutions.com', currentAddress:'Noida, UP', permanentAddress:'Noida', aadharNumber:'345678901234', panNumber:'KLMNO9012P', voterId:'', drivingLicence:'', pfNumber:'PF/12347', uanNumber:'UAN/12347', esicNumber:'ESIC/12347', qualification:'B.Com', university:'Delhi University', passingYear:'2010', previousCompany:'FinCorp', prevDesignation:'Jr. Accountant', totalExperience:'12 Years 0 Months', expYears:'12', expMonths:'0', nomineeName:'Sunita Verma', nomineeRelation:'Spouse', nomineeContact:'9876543215', bankName:'ICICI', accountNumber:'34567890123', ifscCode:'ICIC0003456', bankBranchDetails:'Sector 62', basic:35000, da:7000, hra:6000, status:'Active' },
+    { id: uid(), code:'EMP004', firstName:'Sneha', middleName:'', lastName:'Gupta', name:'Sneha Gupta', nameAsPerAadhar:'Sneha Gupta', fatherName:'Mr. Gupta', motherName:'Mrs. Gupta', gender:'Female', maritalStatus:'Single', religion:'Hindu', dateOfBirth:'1995-03-18', bloodGroup:'AB+', category:'General', departmentId:depts[3].id, subDepartmentId:subdepts[5].id, designation:'Marketing Lead', joiningDate:'2022-01-10', mobileNumber:'9876543216', emergencyContact:'9876543217', emailId:'sneha@manitsolutions.com', currentAddress:'Bangalore, Karnataka', permanentAddress:'Bangalore', aadharNumber:'456789012345', panNumber:'PQRST3456U', voterId:'', drivingLicence:'', pfNumber:'PF/12348', uanNumber:'UAN/12348', esicNumber:'ESIC/12348', qualification:'MBA Marketing', university:'Christ University', passingYear:'2017', previousCompany:'MarketPro', prevDesignation:'Marketing Executive', totalExperience:'5 Years 0 Months', expYears:'5', expMonths:'0', nomineeName:'', nomineeRelation:'', nomineeContact:'', bankName:'Axis', accountNumber:'45678901234', ifscCode:'UTIB0004567', bankBranchDetails:'MG Road', basic:42000, da:8400, hra:7500, status:'Active' },
+    { id: uid(), code:'EMP005', firstName:'Vikram', middleName:'Singh', lastName:'Singh', name:'Vikram Singh', nameAsPerAadhar:'Vikram Singh', fatherName:'Mr. Singh', motherName:'Mrs. Singh', gender:'Male', maritalStatus:'Married', religion:'Sikh', dateOfBirth:'1985-07-25', bloodGroup:'O-', category:'General', departmentId:depts[4].id, subDepartmentId:subdepts[6].id, designation:'Operations Head', joiningDate:'2018-04-01', mobileNumber:'9876543218', emergencyContact:'9876543219', emailId:'vikram@manitsolutions.com', currentAddress:'Chandigarh', permanentAddress:'Chandigarh', aadharNumber:'567890123456', panNumber:'UVWXY6789Z', voterId:'', drivingLicence:'', pfNumber:'PF/12349', uanNumber:'UAN/12349', esicNumber:'ESIC/12349', qualification:'BBA', university:'Panjab University', passingYear:'2007', previousCompany:'OpsWorld', prevDesignation:'Operations Manager', totalExperience:'15 Years 0 Months', expYears:'15', expMonths:'0', nomineeName:'Simran Singh', nomineeRelation:'Spouse', nomineeContact:'9876543219', bankName:'PNB', accountNumber:'56789012345', ifscCode:'PUNB0005678', bankBranchDetails:'Sector 17', basic:60000, da:12000, hra:11000, status:'Active' },
   ];
   STORE.set('employees', emps);
   STORE.set('seeded', true);
@@ -491,7 +611,7 @@ seedData();
 // Helpers
 function getDeptName(id) { const d = STORE.get('departments', []).find(x => x.id === id); return d ? d.name : '—'; }
 function getEmployee(id) { return STORE.get('employees', []).find(x => x.id === id); }
-function getEmpName(id) { const e = getEmployee(id); return e ? e.name + ' (' + e.code + ')' : '—'; }
+function getEmpName(id) { const e = getEmployee(id); return e ? e.name + ' (' + (e.code||'—') + ')' : '—'; }
 
 // ─── AUTH ───────────────────────────────
 function requireAuth() {
@@ -594,9 +714,10 @@ function renderDashboard() {
   document.getElementById('kpiPayrollSub').textContent = MONTHS[currentMonth()] + ' ' + currentYear();
 
   const recent = [...emps].reverse().slice(0, 5);
-  document.getElementById('recentEmployeesTable').innerHTML = recent.map(e =>
-    `<tr><td>${esc(e.code)}</td><td><strong>${esc(e.name)}</strong></td><td>${esc(getDeptName(e.departmentId))}</td><td>${esc(e.designation)}</td><td><span class="badge badge-green">${esc(e.status)}</span></td></tr>`
-  ).join('');
+  document.getElementById('recentEmployeesTable').innerHTML = recent.map(e => {
+    const dn = e.name || [e.firstName, e.middleName, e.lastName].filter(Boolean).join(' ');
+    return `<tr><td>${esc(e.code)}</td><td><strong>${esc(dn)}</strong></td><td>${esc(getDeptName(e.departmentId))}</td><td>${esc(e.designation)}</td><td><span class="badge badge-green">${esc(e.status)}</span></td></tr>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -613,6 +734,10 @@ function populateDeptSelect(id) {
   if (!s) return;
   const depts = STORE.get('departments', []);
   s.innerHTML = depts.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+  // Auto-populate sub-department when department changes (only in employee form)
+  if (id === 'empDepartment') {
+    s.onchange = function() { populateSubDept('empDepartment', 'empSubDepartment', null); };
+  }
 }
 
 function renderEmployees(filter) {
@@ -627,9 +752,10 @@ function renderEmployees(filter) {
     ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:#5A6A7A;">No employees found</td></tr>'
     : list.map(e => {
       const sal = calcSalary(e);
+      const displayName = e.name || [e.firstName, e.middleName, e.lastName].filter(Boolean).join(' ');
       return `<tr>
         <td>${esc(e.code)}</td>
-        <td><strong>${esc(e.name)}</strong></td>
+        <td><strong>${esc(displayName)}</strong></td>
         <td>${esc(getDeptName(e.departmentId))}</td>
         <td>${esc(e.designation)}</td>
         <td>₹${sal.basic.toLocaleString('en-IN')}</td>
@@ -642,18 +768,87 @@ function renderEmployees(filter) {
     }).join('');
 }
 
+function copyAddress() {
+  const same = document.getElementById('empSameAddress').checked;
+  if (same) {
+    document.getElementById('empPermanentAddress').value = document.getElementById('empCurrentAddress').value;
+    document.getElementById('empPermanentAddress').disabled = true;
+  } else {
+    document.getElementById('empPermanentAddress').disabled = false;
+  }
+}
+
+function nextEmpCode() {
+  const emps = STORE.get('employees', []);
+  let max = 0;
+  emps.forEach(e => {
+    const m = parseInt(e.code?.replace('EMP','')) || 0;
+    if (m > max) max = m;
+  });
+  return 'EMP' + String(max + 1).padStart(3, '0');
+}
+
+function populateSubDept(deptSelectId, subDeptSelectId, selectedVal) {
+  const deptId = parseInt(document.getElementById(deptSelectId).value);
+  const s = document.getElementById(subDeptSelectId);
+  if (!s) return;
+  const subdepts = STORE.get('subdepartments', []).filter(sd => sd.departmentId === deptId);
+  s.innerHTML = '<option value="">—</option>' + subdepts.map(sd => `<option value="${sd.id}" ${selectedVal == sd.id ? 'selected':''}>${esc(sd.name)}</option>`).join('');
+}
+
 function openAddEmployeeModal() {
   document.getElementById('empModalTitle').textContent = 'Add Employee';
   document.getElementById('empEditId').value = '';
-  document.getElementById('empCode').value = '';
-  document.getElementById('empName').value = '';
+  document.getElementById('empCode').value = nextEmpCode();
+  document.getElementById('empCode').readOnly = true;
+  document.getElementById('empJoiningDate').value = todayStr();
+  document.getElementById('empFirstName').value = '';
+  document.getElementById('empMiddleName').value = '';
+  document.getElementById('empLastName').value = '';
+  document.getElementById('empAadharName').value = '';
+  document.getElementById('empFatherName').value = '';
+  document.getElementById('empMotherName').value = '';
+  document.getElementById('empGender').value = '';
+  document.getElementById('empMaritalStatus').value = '';
+  document.getElementById('empReligion').value = '';
+  document.getElementById('empDob').value = '';
+  document.getElementById('empBloodGroup').value = '';
+  document.getElementById('empCategory').value = '';
   document.getElementById('empDesignation').value = '';
+  document.getElementById('empContactNo').value = '';
+  document.getElementById('empEmergencyContact').value = '';
+  document.getElementById('empEmail').value = '';
+  document.getElementById('empCurrentAddress').value = '';
+  document.getElementById('empPermanentAddress').value = '';
+  document.getElementById('empPermanentAddress').disabled = false;
+  document.getElementById('empSameAddress').checked = false;
+  document.getElementById('empAadharNo').value = '';
+  document.getElementById('empPanNo').value = '';
+  document.getElementById('empVoterId').value = '';
+  document.getElementById('empDrivingLicence').value = '';
+  document.getElementById('empPfNo').value = '';
+  document.getElementById('empUanNo').value = '';
+  document.getElementById('empEsicNo').value = '';
+  document.getElementById('empQualification').value = '';
+  document.getElementById('empUniversity').value = '';
+  document.getElementById('empPassingYear').value = '';
+  document.getElementById('empPrevCompany').value = '';
+  document.getElementById('empPrevDesignation').value = '';
+  document.getElementById('empExpYears').value = '';
+  document.getElementById('empExpMonths').value = '';
+  document.getElementById('empRefName').value = '';
+  document.getElementById('empRefRelation').value = '';
+  document.getElementById('empRefContact').value = '';
+  document.getElementById('empBankName').value = '';
+  document.getElementById('empAccountNo').value = '';
+  document.getElementById('empIfscCode').value = '';
+  document.getElementById('empBankDetails').value = '';
   document.getElementById('empBasic').value = 25000;
   document.getElementById('empDA').value = 5000;
-  document.getElementById('empPF').checked = true;
-  document.getElementById('empESIC').checked = true;
+  document.getElementById('empHra').value = 0;
   document.getElementById('empStatus').value = 'Active';
   populateDeptSelect('empDepartment');
+  populateSubDept('empDepartment', 'empSubDepartment');
   openModal('employee');
 }
 
@@ -661,34 +856,154 @@ function editEmployee(id) {
   const e = getEmployee(id); if (!e) return;
   document.getElementById('empModalTitle').textContent = 'Edit Employee';
   document.getElementById('empEditId').value = id;
-  document.getElementById('empCode').value = e.code;
-  document.getElementById('empName').value = e.name;
-  document.getElementById('empDesignation').value = e.designation;
-  document.getElementById('empBasic').value = e.basic;
-  document.getElementById('empDA').value = e.da;
-  document.getElementById('empPF').checked = e.pfEnabled !== false;
-  document.getElementById('empESIC').checked = e.esicEnabled !== false;
-  document.getElementById('empStatus').value = e.status;
+  document.getElementById('empCode').value = e.code || '';
+  document.getElementById('empCode').readOnly = true;
+  document.getElementById('empJoiningDate').value = e.joiningDate || '';
+  document.getElementById('empFirstName').value = e.firstName || '';
+  document.getElementById('empMiddleName').value = e.middleName || '';
+  document.getElementById('empLastName').value = e.lastName || '';
+  document.getElementById('empAadharName').value = e.nameAsPerAadhar || '';
+  document.getElementById('empFatherName').value = e.fatherName || '';
+  document.getElementById('empMotherName').value = e.motherName || '';
+  document.getElementById('empGender').value = e.gender || '';
+  document.getElementById('empMaritalStatus').value = e.maritalStatus || '';
+  document.getElementById('empReligion').value = e.religion || '';
+  document.getElementById('empDob').value = e.dateOfBirth || '';
+  document.getElementById('empBloodGroup').value = e.bloodGroup || '';
+  document.getElementById('empCategory').value = e.category || '';
+  document.getElementById('empDesignation').value = e.designation || '';
+  document.getElementById('empContactNo').value = e.mobileNumber || '';
+  document.getElementById('empEmergencyContact').value = e.emergencyContact || '';
+  document.getElementById('empEmail').value = e.emailId || '';
+  document.getElementById('empCurrentAddress').value = e.currentAddress || '';
+  document.getElementById('empPermanentAddress').value = e.permanentAddress || '';
+  document.getElementById('empPermanentAddress').disabled = false;
+  document.getElementById('empSameAddress').checked = false;
+  document.getElementById('empAadharNo').value = e.aadharNumber || '';
+  document.getElementById('empPanNo').value = e.panNumber || '';
+  document.getElementById('empVoterId').value = e.voterId || '';
+  document.getElementById('empDrivingLicence').value = e.drivingLicence || '';
+  document.getElementById('empPfNo').value = e.pfNumber || '';
+  document.getElementById('empUanNo').value = e.uanNumber || '';
+  document.getElementById('empEsicNo').value = e.esicNumber || '';
+  document.getElementById('empQualification').value = e.qualification || '';
+  document.getElementById('empUniversity').value = e.university || '';
+  document.getElementById('empPassingYear').value = e.passingYear || '';
+  document.getElementById('empPrevCompany').value = e.previousCompany || '';
+  document.getElementById('empPrevDesignation').value = e.prevDesignation || '';
+  document.getElementById('empExpYears').value = e.expYears || '';
+  document.getElementById('empExpMonths').value = e.expMonths || '';
+  document.getElementById('empRefName').value = e.nomineeName || '';
+  document.getElementById('empRefRelation').value = e.nomineeRelation || '';
+  document.getElementById('empRefContact').value = e.nomineeContact || '';
+  document.getElementById('empBankName').value = e.bankName || '';
+  document.getElementById('empAccountNo').value = e.accountNumber || '';
+  document.getElementById('empIfscCode').value = e.ifscCode || '';
+  document.getElementById('empBankDetails').value = e.bankBranchDetails || '';
+  document.getElementById('empBasic').value = e.basic || 0;
+  document.getElementById('empDA').value = e.da || 0;
+  document.getElementById('empHra').value = e.hra || 0;
+  document.getElementById('empStatus').value = e.status || 'Active';
   populateDeptSelect('empDepartment');
   document.getElementById('empDepartment').value = e.departmentId;
+  populateSubDept('empDepartment', 'empSubDepartment', e.subDepartmentId);
   openModal('employee');
 }
 
 function saveEmployee() {
   const editId = document.getElementById('empEditId').value;
-  const code = document.getElementById('empCode').value.trim();
-  const name = document.getElementById('empName').value.trim();
-  if (!code || !name) { showToast('Please fill Code and Name', true); return; }
+  const firstName = document.getElementById('empFirstName').value.trim();
+  const lastName = document.getElementById('empLastName').value.trim();
+  const contactNo = document.getElementById('empContactNo').value.trim();
+  const aadharNo = document.getElementById('empAadharNo').value.trim();
+  const bankName = document.getElementById('empBankName').value.trim();
+  const accountNo = document.getElementById('empAccountNo').value.trim();
+  const ifscCode = document.getElementById('empIfscCode').value.trim();
+  const basic = parseFloat(document.getElementById('empBasic').value) || 0;
+  const da = parseFloat(document.getElementById('empDA').value) || 0;
+
+  // Validate required fields
+  const deptVal = document.getElementById('empDepartment').value;
+  const subDeptVal = document.getElementById('empSubDepartment').value;
+  const genderVal = document.getElementById('empGender').value;
+  const maritalVal = document.getElementById('empMaritalStatus').value;
+  const fatherName = document.getElementById('empFatherName').value.trim();
+  const dob = document.getElementById('empDob').value;
+  const joiningDate = document.getElementById('empJoiningDate').value;
+  const aadharName = document.getElementById('empAadharName').value.trim();
+
+  if (!deptVal) { showToast('Please select Department', true); return; }
+  if (!subDeptVal) { showToast('Please select Sub Department', true); return; }
+  if (!firstName) { showToast('First Name is required', true); return; }
+  if (!lastName) { showToast('Last Name is required', true); return; }
+  if (!aadharName) { showToast('Name as per Aadhar is required', true); return; }
+  if (!joiningDate) { showToast('Joining Date is required', true); return; }
+  if (!genderVal) { showToast('Gender is required', true); return; }
+  if (!maritalVal) { showToast('Marital Status is required', true); return; }
+  if (!fatherName) { showToast('Father Name is required', true); return; }
+  if (!dob) { showToast('Date of Birth is required', true); return; }
+  if (!contactNo) { showToast('Contact No is required', true); return; }
+  if (!aadharNo) { showToast('Aadhar No is required', true); return; }
+  if (!bankName) { showToast('Bank Name is required', true); return; }
+  if (!accountNo) { showToast('Account No is required', true); return; }
+  if (!ifscCode) { showToast('IFSC Code is required', true); return; }
+  if (basic <= 0) { showToast('Basic Salary must be > 0', true); return; }
+  if (da <= 0) { showToast('DA/WA is required', true); return; }
+
+  const fullName = [firstName, document.getElementById('empMiddleName').value.trim(), lastName].filter(Boolean).join(' ');
+  const expStr = (document.getElementById('empExpYears').value || '0') + ' Years ' + (document.getElementById('empExpMonths').value || '0') + ' Months';
+
   const data = {
-    code, name,
-    departmentId: parseInt(document.getElementById('empDepartment').value),
+    code: document.getElementById('empCode').value.trim(),
+    firstName, lastName,
+    middleName: document.getElementById('empMiddleName').value.trim(),
+    name: fullName,
+    nameAsPerAadhar: aadharName,
+    fatherName,
+    motherName: document.getElementById('empMotherName').value.trim(),
+    gender: genderVal,
+    maritalStatus: maritalVal,
+    religion: document.getElementById('empReligion').value.trim(),
+    dateOfBirth: dob,
+    bloodGroup: document.getElementById('empBloodGroup').value,
+    category: document.getElementById('empCategory').value,
+    departmentId: parseInt(deptVal),
+    subDepartmentId: subDeptVal ? parseInt(subDeptVal) : null,
     designation: document.getElementById('empDesignation').value.trim(),
-    basic: parseFloat(document.getElementById('empBasic').value) || 0,
-    da: parseFloat(document.getElementById('empDA').value) || 0,
-    pfEnabled: document.getElementById('empPF').checked,
-    esicEnabled: document.getElementById('empESIC').checked,
+    joiningDate,
+    mobileNumber: contactNo,
+    emergencyContact: document.getElementById('empEmergencyContact').value.trim(),
+    emailId: document.getElementById('empEmail').value.trim(),
+    currentAddress: document.getElementById('empCurrentAddress').value.trim(),
+    permanentAddress: document.getElementById('empPermanentAddress').value.trim(),
+    aadharNumber: aadharNo,
+    panNumber: document.getElementById('empPanNo').value.trim(),
+    voterId: document.getElementById('empVoterId').value.trim(),
+    drivingLicence: document.getElementById('empDrivingLicence').value.trim(),
+    pfNumber: document.getElementById('empPfNo').value.trim(),
+    uanNumber: document.getElementById('empUanNo').value.trim(),
+    esicNumber: document.getElementById('empEsicNo').value.trim(),
+    qualification: document.getElementById('empQualification').value.trim(),
+    university: document.getElementById('empUniversity').value.trim(),
+    passingYear: document.getElementById('empPassingYear').value.trim(),
+    previousCompany: document.getElementById('empPrevCompany').value.trim(),
+    prevDesignation: document.getElementById('empPrevDesignation').value.trim(),
+    totalExperience: expStr,
+    expYears: document.getElementById('empExpYears').value,
+    expMonths: document.getElementById('empExpMonths').value,
+    nomineeName: document.getElementById('empRefName').value.trim(),
+    nomineeRelation: document.getElementById('empRefRelation').value.trim(),
+    nomineeContact: document.getElementById('empRefContact').value.trim(),
+    bankName,
+    accountNumber: accountNo,
+    ifscCode,
+    bankBranchDetails: document.getElementById('empBankDetails').value.trim(),
+    basic,
+    da,
+    hra: parseFloat(document.getElementById('empHra').value) || 0,
     status: document.getElementById('empStatus').value,
   };
+
   let emps = STORE.get('employees', []);
   if (editId) {
     const idx = emps.findIndex(e => e.id == editId);
@@ -696,11 +1011,11 @@ function saveEmployee() {
     STORE.set('employees', emps);
     showToast('✅ Employee updated');
   } else {
-    if (emps.find(e => e.code === code)) { showToast('Code already exists', true); return; }
+    if (emps.find(e => e.code === data.code)) { showToast('Code already exists', true); return; }
     data.id = uid();
     emps.push(data);
     STORE.set('employees', emps);
-    showToast('✅ Employee ' + name + ' added');
+    showToast('✅ Employee ' + fullName + ' added');
   }
   closeModal('employee');
   renderEmployees();
@@ -791,9 +1106,8 @@ function calcSalary(emp) {
   const basic = emp.basic || 0;
   const da = emp.da || 0;
   const gross = basic + da;
-  const pf = emp.pfEnabled !== false ? Math.round(basic * (sets.pfPercent || 12) / 100) : 0;
-  const esic = (emp.esicEnabled !== false && gross <= 21000) ? Math.round(gross * (sets.esicPercent || 0.75) / 100) : 0;
-  // PT slab (simplified)
+  const pf = Math.round(basic * (sets.pfPercent || 12) / 100);
+  const esic = (gross <= 21000) ? Math.round(gross * (sets.esicPercent || 0.75) / 100) : 0;
   let pt = 0;
   if (gross > 30000) pt = 300;
   else if (gross > 20000) pt = 200;
