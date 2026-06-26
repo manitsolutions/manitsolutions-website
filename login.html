@@ -155,6 +155,13 @@
         .login-form .back-link a:hover {
             text-decoration: underline;
         }
+        .login-form .loader {
+            display: none;
+            text-align: center;
+            font-size: 13px;
+            color: #5A6A7A;
+            margin-bottom: 12px;
+        }
         @media (max-width: 700px) {
             .login-container { flex-direction: column; }
             .login-side { padding: 32px; }
@@ -173,7 +180,7 @@
                 <li>Fingerprint Biometric Login</li>
                 <li>Automated Salary &amp; Payslip</li>
                 <li>Employee &amp; Department Management</li>
-                <li>Secure &amp; Offline-First</li>
+                <li>Secure &amp; Cloud-Synced</li>
             </ul>
         </div>
         <div class="login-form">
@@ -182,44 +189,51 @@
             <p class="sub">Sign in to access the payroll dashboard.</p>
             <form onsubmit="handleLogin(event)">
                 <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter your username" value="admin" required />
+                <input type="text" id="username" placeholder="Enter your username" value="ManitSolutions" required />
                 <label for="password">Password</label>
                 <input type="password" id="password" placeholder="Enter your password" required />
+                <div class="loader" id="loginLoader">Signing in…</div>
                 <div class="error" id="loginError">Invalid username or password.</div>
-                <button type="submit">Sign In →</button>
+                <button type="submit" id="loginBtn">Sign In →</button>
                 <div class="back-link"><a href="index.html">← Back to Website</a></div>
             </form>
         </div>
     </div>
+    <script src="api.js"></script>
     <script>
-        // Ensure ONLY ManitSolutions admin exists — remove old users
-        (function() {
-            let users = JSON.parse(localStorage.getItem('pw_users') || '[]');
-            // Remove any old/non-standard users
-            users = users.filter(u => u.username === 'ManitSolutions');
-            const exists = users.find(u => u.username === 'ManitSolutions');
-            if (!exists) {
-                users.push({ id: 1, username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] });
+        // If already logged in, redirect
+        (async function() {
+            if (API.getToken()) {
+                const user = await API.me();
+                if (user) {
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+                API.setToken(null);
             }
-            localStorage.setItem('pw_users', JSON.stringify(users));
-            localStorage.setItem('pw_seeded', 'true');
         })();
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
             const error = document.getElementById('loginError');
-            const users = JSON.parse(localStorage.getItem('pw_users') || '[]');
-            const user = users.find(u => u.username === username && u.password === password);
-            if (user) {
-                localStorage.setItem('pw_logged_in', 'true');
-                localStorage.setItem('pw_user', user.username);
-                localStorage.setItem('pw_user_name', user.name);
-                localStorage.setItem('pw_user_role', user.role);
+            const loader = document.getElementById('loginLoader');
+            const btn = document.getElementById('loginBtn');
+
+            error.style.display = 'none';
+            loader.style.display = 'block';
+            btn.disabled = true;
+
+            try {
+                const user = await API.login(username, password);
                 window.location.href = 'dashboard.html';
-            } else {
+            } catch (err) {
+                error.textContent = err.message || 'Invalid username or password.';
                 error.style.display = 'block';
+            } finally {
+                loader.style.display = 'none';
+                btn.disabled = false;
             }
         }
     </script>

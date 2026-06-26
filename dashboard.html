@@ -654,84 +654,72 @@ tr:last-child td { border-bottom: none; }
 <!-- ═══ TOAST ═══ -->
 <div class="toast" id="toast"></div>
 
+<script src="api.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
-// DATA LAYER — localStorage with auto-seed
+// DATA LAYER — In-memory cache backed by Cloudflare API
 // ═══════════════════════════════════════════════════════════════════
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const STORE = {
-  get(k, def) { try { const d = localStorage.getItem('pw_'+k); return d ? JSON.parse(d) : def; } catch { return def; } },
-  set(k, v) { localStorage.setItem('pw_'+k, JSON.stringify(v)); }
+
+const $DB = {
+  _data: {},
+  get(key, def) { return this._data[key] ?? def; },
+  set(key, val) { this._data[key] = val; },
+  // Convert snake_case DB fields to camelCase for frontend compatibility
+  _map(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    const r = {};
+    for (const [k, v] of Object.entries(obj)) {
+      r[k] = v;
+      const camel = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      if (camel !== k) r[camel] = v;
+    }
+    return r;
+  },
+  async load() {
+    try {
+      const [u, d, sd, e, a, s, sl] = await Promise.all([
+        API.getUsers().catch(() => []),
+        API.getDepartments().catch(() => []),
+        API.getSubDepartments().catch(() => []),
+        API.getEmployees().catch(() => []),
+        API.getAttendance().catch(() => []),
+        API.getSalary().catch(() => []),
+        API.getSettings().catch(() => ({})),
+      ]);
+      // Normalize all data from snake_case (DB) to camelCase (frontend)
+      const users = Array.isArray(u) ? u.map(x => this._map(x)) : [];
+      const departments = Array.isArray(d) ? d.map(x => this._map(x)) : [];
+      const subdepartments = Array.isArray(sd) ? sd.map(x => this._map(x)) : [];
+      const employees = Array.isArray(e) ? e.map(x => this._map(x)) : [];
+      const attendance = Array.isArray(a) ? a.map(x => this._map(x)) : [];
+      const salary = Array.isArray(s) ? s.map(x => ({
+        ...this._map(x), net: x.net_pay ?? x.net ?? 0, generatedDate: x.generated_at || x.generatedDate || ''
+      })) : [];
+      this._data = { users, departments, subdepartments, employees, attendance, salary, settings: sl, payslips: [] };
+    } catch (err) {
+      console.error('Failed to load data, redirecting to login', err);
+      window.location.href = 'login.html';
+    }
+  }
 };
-let _uid = STORE.get('uid', 100);
-
-function uid() { _uid++; STORE.set('uid', _uid); return _uid; }
-
-function seedData() {
-  if (STORE.get('seeded', false)) return;
-  const depts = [
-    { id: uid(), name: 'Engineering' }, { id: uid(), name: 'Human Resources' },
-    { id: uid(), name: 'Finance' },     { id: uid(), name: 'Marketing' },
-    { id: uid(), name: 'Operations' },
-  ];
-  STORE.set('departments', depts);
-  const subdepts = [
-    { id: uid(), name: 'Software', departmentId: depts[0].id },
-    { id: uid(), name: 'Hardware', departmentId: depts[0].id },
-    { id: uid(), name: 'Recruitment', departmentId: depts[1].id },
-    { id: uid(), name: 'Payroll', departmentId: depts[2].id },
-    { id: uid(), name: 'Accounts', departmentId: depts[2].id },
-    { id: uid(), name: 'Digital', departmentId: depts[3].id },
-    { id: uid(), name: 'Admin', departmentId: depts[4].id },
-  ];
-  STORE.set('subdepartments', subdepts);
-  // Ensure MANIT Solutions admin user always exists
-  let users = STORE.get('users', []);
-  if (!users.find(u => u.username === 'ManitSolutions')) {
-    users = users.filter(u => u.username === 'ManitSolutions');
-    users.push({ id: uid(), username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] });
-    STORE.set('users', users);
-  }
-  STORE.set('settings', { companyName: 'MANIT SOLUTIONS', address: 'India', phone: '+91-XXXXXXXXXX', email: 'info@manitsolutions.com', pfPercent: 12, esicPercent: 0.75 });
-  const now = todayStr();
-  const emps = [
-    { id: uid(), code:'EMP001', firstName:'Rahul', middleName:'Kumar', lastName:'Sharma', name:'Rahul Kumar Sharma', nameAsPerAadhar:'Rahul Sharma', fatherName:'Mr. Sharma', motherName:'Mrs. Sharma', gender:'Male', maritalStatus:'Married', religion:'Hindu', dateOfBirth:'1990-05-15', bloodGroup:'B+', category:'General', departmentId:depts[0].id, subDepartmentId:subdepts[0].id, designation:'Senior Developer', joiningDate:'2020-01-15', mobileNumber:'9876543210', emergencyContact:'9876543211', emailId:'rahul@manitsolutions.com', currentAddress:'Mumbai, Maharashtra', permanentAddress:'Delhi', aadharNumber:'123456789012', panNumber:'ABCDE1234F', voterId:'', drivingLicence:'', pfNumber:'PF/12345', uanNumber:'UAN/12345', esicNumber:'ESIC/12345', qualification:'B.Tech', university:'Mumbai University', passingYear:'2012', previousCompany:'TechCorp', prevDesignation:'Developer', totalExperience:'10 Years 0 Months', expYears:'10', expMonths:'0', nomineeName:'Priya Sharma', nomineeRelation:'Spouse', nomineeContact:'9876543211', bankName:'SBI', accountNumber:'12345678901', ifscCode:'SBIN0001234', bankBranchDetails:'Andheri Branch', basic:45000, da:9000, hra:8000, status:'Active' },
-    { id: uid(), code:'EMP002', firstName:'Priya', middleName:'', lastName:'Patel', name:'Priya Patel', nameAsPerAadhar:'Priya Patel', fatherName:'Mr. Patel', motherName:'Mrs. Patel', gender:'Female', maritalStatus:'Single', religion:'Hindu', dateOfBirth:'1992-08-22', bloodGroup:'A+', category:'General', departmentId:depts[1].id, subDepartmentId:subdepts[2].id, designation:'HR Manager', joiningDate:'2021-03-01', mobileNumber:'9876543212', emergencyContact:'9876543213', emailId:'priya@manitsolutions.com', currentAddress:'Pune, Maharashtra', permanentAddress:'Pune', aadharNumber:'234567890123', panNumber:'FGHIJ5678K', voterId:'', drivingLicence:'', pfNumber:'PF/12346', uanNumber:'UAN/12346', esicNumber:'ESIC/12346', qualification:'MBA', university:'Pune University', passingYear:'2014', previousCompany:'HRWorld', prevDesignation:'HR Executive', totalExperience:'8 Years 0 Months', expYears:'8', expMonths:'0', nomineeName:'', nomineeRelation:'', nomineeContact:'', bankName:'HDFC', accountNumber:'23456789012', ifscCode:'HDFC0005678', bankBranchDetails:'Koregaon Park', basic:55000, da:11000, hra:10000, status:'Active' },
-    { id: uid(), code:'EMP003', firstName:'Amit', middleName:'', lastName:'Verma', name:'Amit Verma', nameAsPerAadhar:'Amit Verma', fatherName:'Mr. Verma', motherName:'Mrs. Verma', gender:'Male', maritalStatus:'Married', religion:'Hindu', dateOfBirth:'1988-11-10', bloodGroup:'O+', category:'OBC', departmentId:depts[2].id, subDepartmentId:subdepts[3].id, designation:'Accountant', joiningDate:'2019-06-01', mobileNumber:'9876543214', emergencyContact:'9876543215', emailId:'amit@manitsolutions.com', currentAddress:'Noida, UP', permanentAddress:'Noida', aadharNumber:'345678901234', panNumber:'KLMNO9012P', voterId:'', drivingLicence:'', pfNumber:'PF/12347', uanNumber:'UAN/12347', esicNumber:'ESIC/12347', qualification:'B.Com', university:'Delhi University', passingYear:'2010', previousCompany:'FinCorp', prevDesignation:'Jr. Accountant', totalExperience:'12 Years 0 Months', expYears:'12', expMonths:'0', nomineeName:'Sunita Verma', nomineeRelation:'Spouse', nomineeContact:'9876543215', bankName:'ICICI', accountNumber:'34567890123', ifscCode:'ICIC0003456', bankBranchDetails:'Sector 62', basic:35000, da:7000, hra:6000, status:'Active' },
-    { id: uid(), code:'EMP004', firstName:'Sneha', middleName:'', lastName:'Gupta', name:'Sneha Gupta', nameAsPerAadhar:'Sneha Gupta', fatherName:'Mr. Gupta', motherName:'Mrs. Gupta', gender:'Female', maritalStatus:'Single', religion:'Hindu', dateOfBirth:'1995-03-18', bloodGroup:'AB+', category:'General', departmentId:depts[3].id, subDepartmentId:subdepts[5].id, designation:'Marketing Lead', joiningDate:'2022-01-10', mobileNumber:'9876543216', emergencyContact:'9876543217', emailId:'sneha@manitsolutions.com', currentAddress:'Bangalore, Karnataka', permanentAddress:'Bangalore', aadharNumber:'456789012345', panNumber:'PQRST3456U', voterId:'', drivingLicence:'', pfNumber:'PF/12348', uanNumber:'UAN/12348', esicNumber:'ESIC/12348', qualification:'MBA Marketing', university:'Christ University', passingYear:'2017', previousCompany:'MarketPro', prevDesignation:'Marketing Executive', totalExperience:'5 Years 0 Months', expYears:'5', expMonths:'0', nomineeName:'', nomineeRelation:'', nomineeContact:'', bankName:'Axis', accountNumber:'45678901234', ifscCode:'UTIB0004567', bankBranchDetails:'MG Road', basic:42000, da:8400, hra:7500, status:'Active' },
-    { id: uid(), code:'EMP005', firstName:'Vikram', middleName:'Singh', lastName:'Singh', name:'Vikram Singh', nameAsPerAadhar:'Vikram Singh', fatherName:'Mr. Singh', motherName:'Mrs. Singh', gender:'Male', maritalStatus:'Married', religion:'Sikh', dateOfBirth:'1985-07-25', bloodGroup:'O-', category:'General', departmentId:depts[4].id, subDepartmentId:subdepts[6].id, designation:'Operations Head', joiningDate:'2018-04-01', mobileNumber:'9876543218', emergencyContact:'9876543219', emailId:'vikram@manitsolutions.com', currentAddress:'Chandigarh', permanentAddress:'Chandigarh', aadharNumber:'567890123456', panNumber:'UVWXY6789Z', voterId:'', drivingLicence:'', pfNumber:'PF/12349', uanNumber:'UAN/12349', esicNumber:'ESIC/12349', qualification:'BBA', university:'Panjab University', passingYear:'2007', previousCompany:'OpsWorld', prevDesignation:'Operations Manager', totalExperience:'15 Years 0 Months', expYears:'15', expMonths:'0', nomineeName:'Simran Singh', nomineeRelation:'Spouse', nomineeContact:'9876543219', bankName:'PNB', accountNumber:'56789012345', ifscCode:'PUNB0005678', bankBranchDetails:'Sector 17', basic:60000, da:12000, hra:11000, status:'Active' },
-  ];
-  STORE.set('employees', emps);
-  STORE.set('seeded', true);
-}
-
-seedData();
-
-// Always ensure ONLY ManitSolutions admin exists — remove old users
-(function() {
-  let users = STORE.get('users', []);
-  users = users.filter(u => u.username === 'ManitSolutions');
-  if (!users.find(u => u.username === 'ManitSolutions')) {
-    users.push({ id: uid(), username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] });
-  }
-  STORE.set('users', users);
-})();
 
 // Helpers
-function getDeptName(id) { const d = STORE.get('departments', []).find(x => x.id === id); return d ? d.name : '—'; }
-function getEmployee(id) { return STORE.get('employees', []).find(x => x.id === id); }
+function getDeptName(id) { const d = $DB.get('departments', []).find(x => x.id === id); return d ? d.name : '—'; }
+function getEmployee(id) { return $DB.get('employees', []).find(x => x.id === id); }
 function getEmpName(id) { const e = getEmployee(id); return e ? e.name + ' (' + (e.code||'—') + ')' : '—'; }
 
 // ─── AUTH ───────────────────────────────
 function requireAuth() {
-  if (!localStorage.getItem('pw_logged_in')) { window.location.href = 'login.html'; return false; }
-  document.getElementById('sidebarUserName').textContent = localStorage.getItem('pw_user_name') || 'Admin';
+  const user = API.currentUser;
+  if (!user || !API.getToken()) { window.location.href = 'login.html'; return false; }
+  document.getElementById('sidebarUserName').textContent = user.name || 'Admin';
   document.getElementById('sidebarUserRole').textContent =
-    localStorage.getItem('pw_user_role') === 'admin' ? 'Administrator' : 'User';
+    user.role === 'admin' ? 'Administrator' : 'User';
   document.getElementById('sidebarAvatar').textContent =
-    (localStorage.getItem('pw_user_name') || 'A')[0];
+    (user.name || 'A')[0];
   // Hide admin-only tabs for non-admin users
-  const isAdm = localStorage.getItem('pw_user_role') === 'admin';
+  const isAdm = user.role === 'admin';
   const navUsers = document.getElementById('nav-users');
   const navSettings = document.getElementById('nav-settings');
   if (navUsers) navUsers.style.display = isAdm ? 'flex' : 'none';
@@ -746,13 +734,23 @@ function requireAuth() {
   return true;
 }
 function handleLogout() {
-  localStorage.removeItem('pw_logged_in'); localStorage.removeItem('pw_user_name');
-  localStorage.removeItem('pw_user_role'); localStorage.removeItem('pw_user');
+  API.logout();
   window.location.href = 'login.html';
 }
 
+function isAdmin() { return API.currentUser?.role === 'admin'; }
+function getLoggedInUser() { return API.currentUser; }
+
+function filterEmpsByPerm() {
+  const emps = $DB.get('employees', []);
+  if (isAdmin()) return emps;
+  const user = getLoggedInUser();
+  if (!user || !user.permittedDepts || user.permittedDepts.length === 0) return [];
+  return emps.filter(e => user.permittedDepts.includes(e.departmentId));
+}
+
 // ─── PAGE NAV ───────────────────────────
-function showPage(name) {
+async function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const page = document.getElementById('page-' + name);
@@ -816,7 +814,7 @@ function populateMonthYear(monthId, yearId, selectedM, selectedY) {
 // ═══════════════════════════════════════════════════════════════════
 function renderDashboard() {
   const emps = filterEmpsByPerm();
-  const att = STORE.get('attendance', []);
+  const att = $DB.get('attendance', []);
   const today = todayStr();
   const todayAtt = att.filter(a => a.date === today);
   const presentToday = todayAtt.filter(a => a.status === 'P').length;
@@ -826,7 +824,7 @@ function renderDashboard() {
   document.getElementById('kpiPresentToday').textContent = presentToday;
   document.getElementById('kpiPresentSub').textContent = total > 0 ? Math.round(presentToday/total*100) + '% attendance' : '0% attendance';
 
-  const salary = STORE.get('salary', []);
+  const salary = $DB.get('salary', []);
   const currSal = salary.filter(s => s.month === currentMonth() && s.year === currentYear());
   const pending = currSal.filter(s => !s.paid).length;
   const netPayroll = currSal.reduce((sum, s) => sum + s.net, 0);
@@ -848,13 +846,13 @@ function renderDashboard() {
 function populateDeptFilter() {
   const s = document.getElementById('empDeptFilter');
   if (!s) return;
-  const depts = STORE.get('departments', []);
+  const depts = $DB.get('departments', []);
   s.innerHTML = '<option value="">All Depts</option>' + depts.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
 }
 function populateDeptSelect(id) {
   const s = document.getElementById(id);
   if (!s) return;
-  const depts = STORE.get('departments', []);
+  const depts = $DB.get('departments', []);
   s.innerHTML = depts.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
   // Auto-populate sub-department when department changes (only in employee form)
   if (id === 'empDepartment') {
@@ -903,7 +901,7 @@ function copyAddress() {
 }
 
 function nextEmpCode() {
-  const emps = STORE.get('employees', []);
+  const emps = $DB.get('employees', []);
   let max = 0;
   emps.forEach(e => {
     const m = parseInt(e.code?.replace('EMP','')) || 0;
@@ -958,7 +956,7 @@ function populateSubDept(deptSelectId, subDeptSelectId, selectedVal) {
   const deptId = parseInt(document.getElementById(deptSelectId).value);
   const s = document.getElementById(subDeptSelectId);
   if (!s) return;
-  const subdepts = STORE.get('subdepartments', []).filter(sd => sd.departmentId === deptId);
+  const subdepts = $DB.get('subdepartments', []).filter(sd => sd.departmentId === deptId);
   s.innerHTML = '<option value="">—</option>' + subdepts.map(sd => `<option value="${sd.id}" ${selectedVal == sd.id ? 'selected':''}>${esc(sd.name)}</option>`).join('');
 }
 
@@ -1084,7 +1082,7 @@ function editEmployee(id) {
   openModal('employee');
 }
 
-function saveEmployee() {
+async function saveEmployee() {
   const editId = document.getElementById('empEditId').value;
   const firstName = document.getElementById('empFirstName').value.trim();
   const lastName = document.getElementById('empLastName').value.trim();
@@ -1179,17 +1177,21 @@ function saveEmployee() {
     status: document.getElementById('empStatus').value,
   };
 
-  let emps = STORE.get('employees', []);
+  let emps = $DB.get('employees', []);
   if (editId) {
     const idx = emps.findIndex(e => e.id == editId);
     if (idx >= 0) { emps[idx] = { ...emps[idx], ...data }; }
-    STORE.set('employees', emps);
+    $DB.set('employees', emps);
+    await API.updateEmployee(editId, data);
     showToast('✅ Employee updated');
   } else {
     if (emps.find(e => e.code === data.code)) { showToast('Code already exists', true); return; }
-    data.id = uid();
-    emps.push(data);
-    STORE.set('employees', emps);
+    const r = await API.createEmployee(data);
+    if (r && r.id) {
+      data.id = r.id;
+      emps.push(data);
+      $DB.set('employees', emps);
+    }
     showToast('✅ Employee ' + fullName + ' added');
   }
   closeModal('employee');
@@ -1197,14 +1199,15 @@ function saveEmployee() {
   renderDashboard();
 }
 
-function deleteEmployee(id) {
+async function deleteEmployee(id) {
   if (!confirm('Delete this employee?')) return;
-  let emps = STORE.get('employees', []);
+  await API.deleteEmployee(id);
+  let emps = $DB.get('employees', []);
   emps = emps.filter(e => e.id !== id);
-  STORE.set('employees', emps);
-  let att = STORE.get('attendance', []);
+  $DB.set('employees', emps);
+  let att = $DB.get('attendance', []);
   att = att.filter(a => a.employeeId !== id);
-  STORE.set('attendance', att);
+  $DB.set('attendance', att);
   renderEmployees(); renderDashboard();
   showToast('🗑️ Employee deleted');
 }
@@ -1213,8 +1216,8 @@ function deleteEmployee(id) {
 // DEPARTMENTS
 // ═══════════════════════════════════════════════════════════════════
 function renderDepartments() {
-  const depts = STORE.get('departments', []);
-  const emps = STORE.get('employees', []);
+  const depts = $DB.get('departments', []);
+  const emps = $DB.get('employees', []);
   document.getElementById('deptTableBody').innerHTML = depts.length === 0
     ? '<tr><td colspan="4" style="text-align:center;padding:24px;color:#5A6A7A;">No departments</td></tr>'
     : depts.map(d => {
@@ -1234,7 +1237,7 @@ function openAddDeptModal() {
 }
 
 function editDepartment(id) {
-  const depts = STORE.get('departments', []);
+  const depts = $DB.get('departments', []);
   const d = depts.find(x => x.id === id); if (!d) return;
   document.getElementById('deptModalTitle').textContent = 'Edit Department';
   document.getElementById('deptEditId').value = id;
@@ -1242,37 +1245,40 @@ function editDepartment(id) {
   openModal('dept');
 }
 
-function saveDepartment() {
+async function saveDepartment() {
   const editId = document.getElementById('deptEditId').value;
   const name = document.getElementById('deptName').value.trim();
   if (!name) { showToast('Enter department name', true); return; }
-  let depts = STORE.get('departments', []);
+  let depts = $DB.get('departments', []);
   if (editId) {
     const idx = depts.findIndex(d => d.id == editId);
     if (idx >= 0) { depts[idx].name = name; }
-    STORE.set('departments', depts);
+    $DB.set('departments', depts);
+    await API.updateDepartment(editId, name);
     showToast('✅ Department updated');
   } else {
     if (depts.find(d => d.name.toLowerCase() === name.toLowerCase())) { showToast('Name exists', true); return; }
-    depts.push({ id: uid(), name });
-    STORE.set('departments', depts);
+    const r = await API.createDepartment(name);
+    depts.push({ id: r.id, name });
+    $DB.set('departments', depts);
     showToast('✅ Department added');
   }
   closeModal('dept');
   renderDepartments();
 }
 
-function deleteDepartment(id) {
-  const emps = STORE.get('employees', []);
+async function deleteDepartment(id) {
+  const emps = $DB.get('employees', []);
   if (emps.some(e => e.departmentId === id)) { showToast('Cannot delete — has employees', true); return; }
   if (!confirm('Delete this department?')) return;
-  let depts = STORE.get('departments', []);
+  await API.deleteDepartment(id);
+  let depts = $DB.get('departments', []);
   depts = depts.filter(d => d.id !== id);
-  STORE.set('departments', depts);
-  // Also delete sub-departments
-  let subdepts = STORE.get('subdepartments', []);
+  $DB.set('departments', depts);
+  // Also delete sub-departments from cache
+  let subdepts = $DB.get('subdepartments', []);
   subdepts = subdepts.filter(sd => sd.departmentId !== id);
-  STORE.set('subdepartments', subdepts);
+  $DB.set('subdepartments', subdepts);
   renderDepartments(); renderSubDepartments();
   showToast('🗑️ Department deleted');
 }
@@ -1280,7 +1286,7 @@ function deleteDepartment(id) {
 // ─── SUB-DEPARTMENTS ────────────────────────
 function renderSubDepartments() {
   const filterDeptId = document.getElementById('subdeptDeptFilter')?.value;
-  const subdepts = STORE.get('subdepartments', []);
+  const subdepts = $DB.get('subdepartments', []);
   let list = subdepts;
   if (filterDeptId) list = list.filter(sd => sd.departmentId == filterDeptId);
   
@@ -1291,7 +1297,7 @@ function renderSubDepartments() {
   // Populate filter
   const filter = document.getElementById('subdeptDeptFilter');
   if (filter) {
-    const depts = STORE.get('departments', []);
+    const depts = $DB.get('departments', []);
     const currentVal = filter.value;
     filter.innerHTML = '<option value="">All Depts</option>' + depts.map(d => `<option value="${d.id}" ${d.id==currentVal?'selected':''}>${esc(d.name)}</option>`).join('');
   }
@@ -1302,31 +1308,33 @@ function openAddSubDeptModal() {
   document.getElementById('subdeptEditId').value = '';
   document.getElementById('subdeptName').value = '';
   const sel = document.getElementById('subdeptDeptSelect');
-  const depts = STORE.get('departments', []);
+  const depts = $DB.get('departments', []);
   sel.innerHTML = depts.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
   openModal('subdept');
 }
 
-function saveSubDepartment() {
+async function saveSubDepartment() {
   const name = document.getElementById('subdeptName').value.trim();
   const deptId = parseInt(document.getElementById('subdeptDeptSelect').value);
   if (!name || !deptId) { showToast('Fill all fields', true); return; }
-  let subdepts = STORE.get('subdepartments', []);
+  let subdepts = $DB.get('subdepartments', []);
   if (subdepts.find(sd => sd.name.toLowerCase() === name.toLowerCase() && sd.departmentId === deptId)) {
     showToast('Name already exists in this department', true); return;
   }
-  subdepts.push({ id: uid(), name, departmentId: deptId });
-  STORE.set('subdepartments', subdepts);
+  const r = await API.createSubDepartment(name, deptId);
+  subdepts.push({ id: r.id, name, departmentId: deptId });
+  $DB.set('subdepartments', subdepts);
   closeModal('subdept');
   renderSubDepartments();
   showToast('✅ Sub-department added');
 }
 
-function deleteSubDepartment(id) {
+async function deleteSubDepartment(id) {
   if (!confirm('Delete this sub-department?')) return;
-  let subdepts = STORE.get('subdepartments', []);
+  await API.deleteSubDepartment(id);
+  let subdepts = $DB.get('subdepartments', []);
   subdepts = subdepts.filter(sd => sd.id !== id);
-  STORE.set('subdepartments', subdepts);
+  $DB.set('subdepartments', subdepts);
   renderSubDepartments();
   showToast('🗑️ Sub-department deleted');
 }
@@ -1335,7 +1343,7 @@ function deleteSubDepartment(id) {
 // SALARY CALCULATIONS
 // ═══════════════════════════════════════════════════════════════════
 function calcSalary(emp) {
-  const sets = STORE.get('settings', { pfPercent: 12, esicPercent: 0.75 });
+  const sets = $DB.get('settings', { pfPercent: 12, esicPercent: 0.75 });
   const basic = emp.basic || 0;
   const da = emp.da || 0;
   const gross = basic + da;
@@ -1355,7 +1363,7 @@ function calcSalary(emp) {
 function renderAttendance() {
   const date = document.getElementById('attendanceDate').value || todayStr();
   const emps = getFilteredAttEmployees();
-  const att = STORE.get('attendance', []);
+  const att = $DB.get('attendance', []);
   
   document.getElementById('attendanceTableBody').innerHTML = emps.length === 0
     ? '<tr><td colspan="6" style="text-align:center;padding:24px;color:#5A6A7A;">No active employees</td></tr>'
@@ -1384,33 +1392,34 @@ function renderAttendance() {
     }).join('');
 }
 
-function markAttendance(empId, status) {
+async function markAttendance(empId, status) {
   const date = document.getElementById('attendanceDate').value || todayStr();
-  let att = STORE.get('attendance', []);
+  let att = $DB.get('attendance', []);
   const idx = att.findIndex(a => a.employeeId === empId && a.date === date);
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   if (status) {
-    const rec = { employeeId: empId, date, status, time: timeStr };
+    const rec = { employeeId: empId, date, status };
     if (idx >= 0) att[idx] = rec; else att.push(rec);
   } else {
     if (idx >= 0) att.splice(idx, 1);
   }
-  STORE.set('attendance', att);
+  $DB.set('attendance', att);
+  await API.batchAttendance([{ employeeId: empId, date, status: status || 'A' }]);
   showToast('✅ Attendance updated');
 }
 
-function markAllPresent() {
+async function markAllPresent() {
   const date = document.getElementById('attendanceDate').value || todayStr();
   const emps = getFilteredAttEmployees();
-  let att = STORE.get('attendance', []);
-  const now = new Date(); const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  let att = $DB.get('attendance', []);
+  const records = [];
   emps.forEach(e => {
     const idx = att.findIndex(a => a.employeeId === e.id && a.date === date);
-    const rec = { employeeId: e.id, date, status: 'P', time: timeStr };
+    const rec = { employeeId: e.id, date, status: 'P' };
     if (idx >= 0) att[idx] = rec; else att.push(rec);
+    records.push(rec);
   });
-  STORE.set('attendance', att);
+  $DB.set('attendance', att);
+  await API.batchAttendance(records);
   renderAttendance(); renderDashboard();
   showToast('✅ All marked Present');
 }
@@ -1420,7 +1429,7 @@ function renderMonthlyAttendance() {
   const month = parseInt(document.getElementById('attMonth').value);
   const year = parseInt(document.getElementById('attYear').value);
   const emps = getFilteredAttEmployees();
-  const att = STORE.get('attendance', []).filter(a => {
+  const att = $DB.get('attendance', []).filter(a => {
     const d = new Date(a.date);
     return d.getMonth() === month && d.getFullYear() === year;
   });
@@ -1458,7 +1467,7 @@ function computeMonthlyAttendance() {
 // ═══════════════════════════════════════════════════════════════════
 // ─── ATTENDANCE FILTERS ──────────────────────
 function populateAttendanceFilters() {
-  const depts = STORE.get('departments', []);
+  const depts = $DB.get('departments', []);
   const deptSel = document.getElementById('attDeptFilter');
   if (!deptSel) return;
   const curVal = deptSel.value;
@@ -1468,7 +1477,7 @@ function populateAttendanceFilters() {
 function onAttDeptFilterChange(refresh) {
   const deptId = document.getElementById('attDeptFilter').value;
   const subSel = document.getElementById('attSubDeptFilter');
-  const subdepts = STORE.get('subdepartments', []);
+  const subdepts = $DB.get('subdepartments', []);
   const curSub = subSel.value;
   let list = deptId ? subdepts.filter(sd => sd.departmentId == deptId) : subdepts;
   subSel.innerHTML = '<option value="">All Sub-Depts</option>' + list.map(sd => '<option value="'+sd.id+'" '+(sd.id==curSub?'selected':'')+'>'+esc(sd.name)+'</option>').join('');
@@ -1491,7 +1500,7 @@ function getDayStatus(empId, year, month, day) {
   const ds = String(day).padStart(2,'0');
   const ms = String(month+1).padStart(2,'0');
   const dateStr = year + '-' + ms + '-' + ds;
-  const att = STORE.get('attendance', []);
+  const att = $DB.get('attendance', []);
   const rec = att.find(a => a.employeeId === empId && a.date === dateStr);
   return rec ? rec.status : '';
 }
@@ -1500,15 +1509,15 @@ function setDayStatus(empId, year, month, day, status) {
   const ds = String(day).padStart(2,'0');
   const ms = String(month+1).padStart(2,'0');
   const dateStr = year + '-' + ms + '-' + ds;
-  let att = STORE.get('attendance', []);
+  let att = $DB.get('attendance', []);
   const idx = att.findIndex(a => a.employeeId === empId && a.date === dateStr);
   if (status) {
-    const rec = { employeeId: empId, date: dateStr, status, time: '' };
+    const rec = { employeeId: empId, date: dateStr, status };
     if (idx >= 0) att[idx] = rec; else att.push(rec);
   } else {
     if (idx >= 0) att.splice(idx, 1);
   }
-  STORE.set('attendance', att);
+  $DB.set('attendance', att);
 }
 
 function renderDaywiseAttendance() {
@@ -1577,20 +1586,26 @@ function onDaywiseBlur(inp) {
   }
 }
 
-function saveDaywiseAttendance() {
+async function saveDaywiseAttendance() {
   const month = parseInt(document.getElementById('dwMonth').value);
   const year = parseInt(document.getElementById('dwYear').value);
   const days = daysInMonth(month, year);
   const selects = document.querySelectorAll('#daywiseGridContainer input.dw-input[data-eid]');
+  const records = [];
   let count = 0;
   selects.forEach(sel => {
     const empId = parseInt(sel.dataset.eid);
     const day = parseInt(sel.dataset.day);
     const status = sel.value;
     setDayStatus(empId, year, month, day, status);
-    if (status) count++;
+    if (status) {
+      const ds = String(day).padStart(2,'0');
+      const ms = String(month+1).padStart(2,'0');
+      records.push({ employeeId: empId, date: `${year}-${ms}-${ds}`, status });
+      count++;
+    }
   });
-  // Update the summary and totals
+  if (records.length > 0) await API.batchAttendance(records);
   renderDaywiseAttendance();
   renderMonthlyAttendance();
   renderDashboard();
@@ -1603,7 +1618,7 @@ function saveDaywiseAttendance() {
 function renderSalary() {
   const month = parseInt(document.getElementById('salMonth').value);
   const year = parseInt(document.getElementById('salYear').value);
-  let salary = STORE.get('salary', []).filter(s => s.month === month && s.year === year);
+  let salary = $DB.get('salary', []).filter(s => s.month === month && s.year === year);
   const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
   
   const totalAmt = salary.reduce((s, r) => s + r.net, 0);
@@ -1614,7 +1629,7 @@ function renderSalary() {
   document.getElementById('sTotalPaid').textContent = '₹' + paidAmt.toLocaleString('en-IN');
   document.getElementById('sTotalUnpaid').textContent = '₹' + unpaidAmt.toLocaleString('en-IN');
   document.getElementById('sTotalEmp').textContent = salary.length;
-  document.getElementById('sTotalSub').textContent = 'of ' + STORE.get('employees', []).filter(e => e.status === 'Active').length + ' active employees (filtered: ' + emps.length + ')';
+  document.getElementById('sTotalSub').textContent = 'of ' + $DB.get('employees', []).filter(e => e.status === 'Active').length + ' active employees (filtered: ' + emps.length + ')';
   
   document.getElementById('salaryTableBody').innerHTML = salary.length === 0
     ? '<tr><td colspan="11" style="text-align:center;padding:24px;color:#5A6A7A;">Click "Generate" for ' + MONTHS[month] + ' ' + year + '</td></tr>'
@@ -1636,48 +1651,49 @@ function renderSalary() {
     }).join('');
 }
 
-function generateSalary() {
+async function generateSalary() {
   const month = parseInt(document.getElementById('salMonth').value);
   const year = parseInt(document.getElementById('salYear').value);
   const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
-  let salary = STORE.get('salary', []);
-  
+  let salary = $DB.get('salary', []);
   // Remove existing for this month
   salary = salary.filter(s => !(s.month === month && s.year === year));
-  
-  emps.forEach(e => {
-    const c = calcSalary(e);
+  for (const e of emps) {
+    const r = await API.generateSalary(e.id, month, year);
     salary.push({
-      id: uid(), employeeId: e.id, month, year,
-      basic: c.basic, da: c.da, gross: c.gross,
-      pf: c.pf, esic: c.esic, pt: c.pt,
-      net: c.net, paid: false, generatedDate: todayStr()
+      id: r.id, employeeId: r.employeeId, month: r.month, year: r.year,
+      basic: r.basic, da: r.da, gross: r.gross,
+      pf: r.pf, esic: r.esic, pt: r.pt,
+      net: r.netPay, paid: false, generatedDate: todayStr()
     });
-  });
-  STORE.set('salary', salary);
+  }
+  $DB.set('salary', salary);
   renderSalary(); renderDashboard();
   showToast('⚡ Salary generated for ' + emps.length + ' employees');
 }
 
-function togglePaid(id) {
-  let salary = STORE.get('salary', []);
+async function togglePaid(id) {
+  let salary = $DB.get('salary', []);
   const idx = salary.findIndex(s => s.id === id);
   if (idx >= 0) { salary[idx].paid = !salary[idx].paid; }
-  STORE.set('salary', salary);
+  $DB.set('salary', salary);
+  await API.updateSalary(id, { paid: salary[idx]?.paid });
   renderSalary(); renderDashboard();
   showToast('✅ Status updated');
 }
 
-function togglePaidAll() {
+async function togglePaidAll() {
   const month = parseInt(document.getElementById('salMonth').value);
   const year = parseInt(document.getElementById('salYear').value);
-  let salary = STORE.get('salary', []);
+  let salary = $DB.get('salary', []);
   let changed = 0;
+  const updates = [];
   salary = salary.map(s => {
-    if (s.month === month && s.year === year && !s.paid) { changed++; return { ...s, paid: true }; }
+    if (s.month === month && s.year === year && !s.paid) { changed++; updates.push(s.id); return { ...s, paid: true }; }
     return s;
   });
-  STORE.set('salary', salary);
+  $DB.set('salary', salary);
+  for (const id of updates) await API.updateSalary(id, { paid: true });
   renderSalary(); renderDashboard();
   showToast('✅ ' + changed + ' salaries marked paid');
 }
@@ -1688,8 +1704,8 @@ function togglePaidAll() {
 function renderPayslipList() {
   const month = parseInt(document.getElementById('psMonth').value);
   const year = parseInt(document.getElementById('psYear').value);
-  const salary = STORE.get('salary', []).filter(s => s.month === month && s.year === year);
-  const payslips = STORE.get('payslips', []);
+  const salary = $DB.get('salary', []).filter(s => s.month === month && s.year === year);
+  const payslips = $DB.get('payslips', []);
   
   document.getElementById('payslipTableBody').innerHTML = salary.length === 0
     ? '<tr><td colspan="6" style="text-align:center;padding:24px;color:#5A6A7A;">Generate salary first</td></tr>'
@@ -1711,10 +1727,10 @@ function renderPayslipList() {
 }
 
 function generateSinglePayslip(empId, month, year) {
-  let payslips = STORE.get('payslips', []);
+  let payslips = $DB.get('payslips', []);
   if (!payslips.some(p => p.employeeId === empId && p.month === month && p.year === year)) {
-    payslips.push({ id: uid(), employeeId: empId, month, year, generatedDate: todayStr() });
-    STORE.set('payslips', payslips);
+    payslips.push({ employeeId: empId, month, year, generatedDate: todayStr() });
+    $DB.set('payslips', payslips);
   }
   renderPayslipList();
   showToast('📄 Payslip generated');
@@ -1723,25 +1739,25 @@ function generateSinglePayslip(empId, month, year) {
 function generateAllPayslips() {
   const month = parseInt(document.getElementById('psMonth').value);
   const year = parseInt(document.getElementById('psYear').value);
-  const salary = STORE.get('salary', []).filter(s => s.month === month && s.year === year);
-  let payslips = STORE.get('payslips', []);
+  const salary = $DB.get('salary', []).filter(s => s.month === month && s.year === year);
+  let payslips = $DB.get('payslips', []);
   let count = 0;
   salary.forEach(r => {
     if (!payslips.some(p => p.employeeId === r.employeeId && p.month === month && p.year === year)) {
-      payslips.push({ id: uid(), employeeId: r.employeeId, month, year, generatedDate: todayStr() });
+      payslips.push({ employeeId: r.employeeId, month, year, generatedDate: todayStr() });
       count++;
     }
   });
-  STORE.set('payslips', payslips);
+  $DB.set('payslips', payslips);
   renderPayslipList();
   showToast('📄 ' + count + ' payslips generated');
 }
 
 function viewPayslip(empId, month, year) {
   const emp = getEmployee(empId);
-  const salary = STORE.get('salary', []).find(s => s.employeeId === empId && s.month === month && s.year === year);
+  const salary = $DB.get('salary', []).find(s => s.employeeId === empId && s.month === month && s.year === year);
   if (!emp || !salary) { showToast('Salary record not found', true); return; }
-  const sets = STORE.get('settings', { companyName: 'MANIT SOLUTIONS', address: 'India' });
+  const sets = $DB.get('settings', { companyName: 'MANIT SOLUTIONS', address: 'India' });
   
   document.getElementById('psPrintHeader').innerHTML = `<h2>${esc(sets.companyName || 'MANIT SOLUTIONS')}</h2><p>Salary Payslip — ${MONTHS[month]} ${year}</p>`;
   
@@ -1766,10 +1782,10 @@ function viewPayslip(empId, month, year) {
   openModal('payslip');
   
   // Mark as generated
-  let payslips = STORE.get('payslips', []);
+  let payslips = $DB.get('payslips', []);
   if (!payslips.some(p => p.employeeId === empId && p.month === month && p.year === year)) {
-    payslips.push({ id: uid(), employeeId: empId, month, year, generatedDate: todayStr() });
-    STORE.set('payslips', payslips);
+    payslips.push({ employeeId: empId, month, year, generatedDate: todayStr() });
+    $DB.set('payslips', payslips);
   }
   renderPayslipList();
 }
@@ -1779,22 +1795,7 @@ function viewPayslip(empId, month, year) {
 // ═══════════════════════════════════════════════════════════════════
 
 // ─── PERMISSION HELPERS ─────────────────────
-function getLoggedInUser() {
-  const username = localStorage.getItem('pw_user');
-  const users = STORE.get('users', []);
-  return users.find(u => u.username === username) || null;
-}
-
-function isAdmin() { return localStorage.getItem('pw_user_role') === 'admin'; }
-
-function filterEmpsByPerm() {
-  const emps = STORE.get('employees', []);
-  if (isAdmin()) return emps;
-  const user = getLoggedInUser();
-  if (!user || !user.permittedDepts || user.permittedDepts.length === 0) return [];
-  return emps.filter(e => user.permittedDepts.includes(e.departmentId));
-}
-
+// (getLoggedInUser, isAdmin, filterEmpsByPerm defined above in auth section)
 // ─── TOGGLE PERMISSIONS ─────────────────────
 function toggleUserPermissions() {
   document.getElementById('userPermissionsSection').style.display =
@@ -1802,8 +1803,8 @@ function toggleUserPermissions() {
 }
 
 function populateUserPermCheckboxes(selectedDepts, selectedSubdepts) {
-  const depts = STORE.get('departments', []);
-  const subdepts = STORE.get('subdepartments', []);
+  const depts = $DB.get('departments', []);
+  const subdepts = $DB.get('subdepartments', []);
   const deptDiv = document.getElementById('userDeptCheckboxes');
   deptDiv.innerHTML = depts.map(d => {
     const checked = selectedDepts && selectedDepts.includes(d.id) ? 'checked' : '';
@@ -1821,7 +1822,7 @@ function onUserDeptChange() {
   const checkedDepts = Array.from(document.querySelectorAll('.user-dept-cb:checked')).map(cb => parseInt(cb.value));
   document.querySelectorAll('.user-subdept-cb').forEach(cb => {
     const sdId = parseInt(cb.value);
-    const subdepts = STORE.get('subdepartments', []);
+    const subdepts = $DB.get('subdepartments', []);
     const sd = subdepts.find(x => x.id === sdId);
     const label = cb.closest('label');
     if (sd && checkedDepts.length > 0 && !checkedDepts.includes(sd.departmentId)) {
@@ -1842,8 +1843,8 @@ function renderUsers() {
     document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#5A6A7A;">Access restricted to Administrators</td></tr>';
     return;
   }
-  const users = STORE.get('users', []);
-  const currentUser = localStorage.getItem('pw_user');
+  const users = $DB.get('users', []);
+  const currentUser = API.currentUser?.username;
   document.getElementById('usersTableBody').innerHTML = users.map(u =>
     `<tr>
       <td>${esc(u.username)}</td>
@@ -1871,12 +1872,13 @@ function openAddUserModal() {
 }
 
 function editUser(id) {
-  const users = STORE.get('users', []);
+  const users = $DB.get('users', []);
   const u = users.find(x => x.id === id); if (!u) return;
   document.getElementById('userModalTitle').textContent = 'Edit User';
   document.getElementById('userEditId').value = id;
   document.getElementById('userUsername').value = u.username;
-  document.getElementById('userPassword').value = u.password;
+  document.getElementById('userPassword').value = '';
+  document.getElementById('userPassword').placeholder = 'Leave blank to keep current';
   document.getElementById('userDisplayName').value = u.name;
   document.getElementById('userRole').value = u.role;
   toggleUserPermissions();
@@ -1884,7 +1886,7 @@ function editUser(id) {
   openModal('user');
 }
 
-function saveUser() {
+async function saveUser() {
   const editId = document.getElementById('userEditId').value;
   const username = document.getElementById('userUsername').value.trim();
   const password = document.getElementById('userPassword').value.trim();
@@ -1892,29 +1894,32 @@ function saveUser() {
   const role = document.getElementById('userRole').value;
   if (!username || !password || !name) { showToast('Fill all fields', true); return; }
   const perms = role === 'admin' ? { permittedDepts: [], permittedSubDepts: [] } : getSelectedPerms();
-  let users = STORE.get('users', []);
+  let users = $DB.get('users', []);
   if (editId) {
     const idx = users.findIndex(u => u.id == editId);
     if (idx >= 0) { users[idx] = { ...users[idx], username, password, name, role, ...perms }; }
-    STORE.set('users', users);
+    $DB.set('users', users);
+    await API.updateUser(editId, { username, password, name, role, ...perms });
     showToast('✅ User updated');
   } else {
     if (users.find(u => u.username === username)) { showToast('Username exists', true); return; }
-    users.push({ id: uid(), username, password, name, role, ...perms });
-    STORE.set('users', users);
+    const r = await API.createUser({ username, password, name, role, ...perms });
+    users.push({ id: r.id, username, password, name, role, permittedDepts: perms.permittedDepts, permittedSubDepts: perms.permittedSubDepts });
+    $DB.set('users', users);
     showToast('✅ User added');
   }
   closeModal('user');
   renderUsers();
 }
 
-function deleteUser(id) {
+async function deleteUser(id) {
   if (!confirm('Delete this user?')) return;
-  let users = STORE.get('users', []);
+  let users = $DB.get('users', []);
   const u = users.find(x => x.id === id);
   if (u && u.username === 'ManitSolutions') { showToast('Cannot delete main admin', true); return; }
+  await API.deleteUser(id);
   users = users.filter(u => u.id !== id);
-  STORE.set('users', users);
+  $DB.set('users', users);
   renderUsers();
   showToast('🗑️ User deleted');
 }
@@ -1923,7 +1928,7 @@ function deleteUser(id) {
 // SETTINGS
 // ═══════════════════════════════════════════════════════════════════
 function loadSettings() {
-  const s = STORE.get('settings', {});
+  const s = $DB.get('settings', {});
   document.getElementById('setCompanyName').value = s.companyName || '';
   document.getElementById('setAddress').value = s.address || '';
   document.getElementById('setPhone').value = s.phone || '';
@@ -1932,7 +1937,7 @@ function loadSettings() {
   document.getElementById('setESICPercent').value = s.esicPercent || 0.75;
 }
 
-function saveSettings() {
+async function saveSettings() {
   const s = {
     companyName: document.getElementById('setCompanyName').value.trim(),
     address: document.getElementById('setAddress').value.trim(),
@@ -1941,7 +1946,8 @@ function saveSettings() {
     pfPercent: parseFloat(document.getElementById('setPFPercent').value) || 12,
     esicPercent: parseFloat(document.getElementById('setESICPercent').value) || 0.75,
   };
-  STORE.set('settings', s);
+  $DB.set('settings', s);
+  await API.updateSettings(s);
   showToast('💾 Settings saved');
 }
 
@@ -1951,9 +1957,28 @@ function esc(s) { if (s == null) return ''; return String(s).replace(/&/g,'&amp;
 // ═══════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  // Wait for API init (token check + current user fetch)
+  await new Promise(r => setTimeout(r, 100));
+  if (!API.currentUser && API.getToken()) {
+    try { API.currentUser = await API.me(); } catch {}
+  }
+  if (!API.currentUser || !API.getToken()) { window.location.href = 'login.html'; return; }
   if (!requireAuth()) return;
-  
+
+  // Load all data from API
+  await $DB.load();
+
+  // Seed sample data if DB is empty
+  const depts = $DB.get('departments', []);
+  if (depts.length === 0 && API.currentUser?.role === 'admin') {
+    try {
+      await API.seedData();
+      await $DB.load();
+      showToast('📦 Sample data loaded');
+    } catch {}
+  }
+
   document.getElementById('currentDate').textContent =
     'TODAY: ' + new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   
