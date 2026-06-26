@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -318,6 +318,13 @@ tr:last-child td { border-bottom: none; }
 
     <!-- ══ PAGE: ATTENDANCE ══ -->
     <div class="page" id="page-attendance">
+      <!-- Filter Bar -->
+      <div style="display:flex;gap:10px;align-items:center;padding:12px 16px;background:#fff;border-radius:14px;border:1px solid #E2E8F0;margin-bottom:16px;flex-wrap:wrap;">
+        <span style="font-size:12px;font-weight:600;color:#5A6A7A;">FILTER:</span>
+        <select id="attDeptFilter" onchange="onAttDeptFilterChange()" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;min-width:140px;"><option value="">All Departments</option></select>
+        <select id="attSubDeptFilter" onchange="refreshAttendanceViews()" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;min-width:140px;"><option value="">All Sub-Depts</option></select>
+      </div>
+      <!-- Daily View -->
       <div class="card">
         <div class="card-header">
           <h3>Daily Attendance</h3>
@@ -328,6 +335,7 @@ tr:last-child td { border-bottom: none; }
         </div>
         <table><thead><tr><th>Code</th><th>Name</th><th>Department</th><th>Status</th><th>Time</th><th>Action</th></tr></thead><tbody id="attendanceTableBody"></tbody></table>
       </div>
+      <!-- Monthly Summary -->
       <div class="card">
         <div class="card-header">
           <h3>Monthly Summary</h3>
@@ -343,7 +351,15 @@ tr:last-child td { border-bottom: none; }
       <div class="card">
         <div class="card-header">
           <h3>Day-Wise Attendance</h3>
-          <div class="actions">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:10px;display:flex;gap:4px;align-items:center;">
+              <span class="badge badge-green">P</span> Present
+              <span class="badge badge-red">A</span> Absent
+              <span class="badge badge-yellow">L</span> Late
+              <span class="badge badge-blue">HO</span> Holiday
+              <span class="badge badge-gray" style="background:#F0F2F5;color:#5A6A7A;">W</span> Week Off
+              <span style="background:#FFF3E0;color:#E65100;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600;">H</span> Half Day
+            </span>
             <select id="dwMonth" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderDaywiseAttendance()"></select>
             <select id="dwYear" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderDaywiseAttendance()"></select>
             <button class="btn btn-secondary btn-sm" onclick="renderDaywiseAttendance()">⟳ Refresh</button>
@@ -737,7 +753,7 @@ function showPage(name) {
   if (name === 'dashboard') renderDashboard();
   else if (name === 'employees') { populateDeptFilter(); renderEmployees(); }
   else if (name === 'departments') { renderDepartments(); renderSubDepartments(); }
-  else if (name === 'attendance') { renderAttendance(); renderMonthlyAttendance(); renderDaywiseAttendance(); }
+  else if (name === 'attendance') { populateAttendanceFilters(); renderAttendance(); renderMonthlyAttendance(); renderDaywiseAttendance(); }
   else if (name === 'salary') renderSalary();
   else if (name === 'payslip') renderPayslipList();
   else if (name === 'users') renderUsers();
@@ -1324,7 +1340,7 @@ function calcSalary(emp) {
 // ═══════════════════════════════════════════════════════════════════
 function renderAttendance() {
   const date = document.getElementById('attendanceDate').value || todayStr();
-  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
+  const emps = getFilteredAttEmployees();
   const att = STORE.get('attendance', []);
   
   document.getElementById('attendanceTableBody').innerHTML = emps.length === 0
@@ -1372,7 +1388,7 @@ function markAttendance(empId, status) {
 
 function markAllPresent() {
   const date = document.getElementById('attendanceDate').value || todayStr();
-  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
+  const emps = getFilteredAttEmployees();
   let att = STORE.get('attendance', []);
   const now = new Date(); const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   emps.forEach(e => {
@@ -1389,7 +1405,7 @@ function markAllPresent() {
 function renderMonthlyAttendance() {
   const month = parseInt(document.getElementById('attMonth').value);
   const year = parseInt(document.getElementById('attYear').value);
-  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
+  const emps = getFilteredAttEmployees();
   const att = STORE.get('attendance', []).filter(a => {
     const d = new Date(a.date);
     return d.getMonth() === month && d.getFullYear() === year;
@@ -1426,6 +1442,34 @@ function computeMonthlyAttendance() {
 // ═══════════════════════════════════════════════════════════════════
 // DAY-WISE ATTENDANCE GRID
 // ═══════════════════════════════════════════════════════════════════
+// ─── ATTENDANCE FILTERS ──────────────────────
+function populateAttendanceFilters() {
+  const depts = STORE.get('departments', []);
+  const deptSel = document.getElementById('attDeptFilter');
+  if (!deptSel) return;
+  const curVal = deptSel.value;
+  deptSel.innerHTML = '<option value="">All Departments</option>' + depts.map(d => '<option value="'+d.id+'" '+(d.id==curVal?'selected':'')+'>'+esc(d.name)+'</option>').join('');
+  onAttDeptFilterChange(false);
+}
+function onAttDeptFilterChange(refresh) {
+  const deptId = document.getElementById('attDeptFilter').value;
+  const subSel = document.getElementById('attSubDeptFilter');
+  const subdepts = STORE.get('subdepartments', []);
+  const curSub = subSel.value;
+  let list = deptId ? subdepts.filter(sd => sd.departmentId == deptId) : subdepts;
+  subSel.innerHTML = '<option value="">All Sub-Depts</option>' + list.map(sd => '<option value="'+sd.id+'" '+(sd.id==curSub?'selected':'')+'>'+esc(sd.name)+'</option>').join('');
+  if (refresh !== false) refreshAttendanceViews();
+}
+function refreshAttendanceViews() { renderAttendance(); renderMonthlyAttendance(); renderDaywiseAttendance(); }
+function getFilteredAttEmployees() {
+  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
+  const deptId = document.getElementById('attDeptFilter')?.value;
+  const subDeptId = document.getElementById('attSubDeptFilter')?.value;
+  let list = emps;
+  if (deptId) list = list.filter(e => e.departmentId == deptId);
+  if (subDeptId) list = list.filter(e => e.subDepartmentId == subDeptId);
+  return list;
+}
 const ATT_STATUSES = ['P','A','L','H','W','HO'];
 const ATT_LABELS = { P:'P', A:'A', L:'L', H:'H', W:'W', HO:'HO' };
 
@@ -1457,7 +1501,7 @@ function renderDaywiseAttendance() {
   const month = parseInt(document.getElementById('dwMonth').value);
   const year = parseInt(document.getElementById('dwYear').value);
   const days = daysInMonth(month, year);
-  const emps = filterEmpsByPerm().filter(e => e.status === 'Active');
+  const emps = getFilteredAttEmployees();
   const container = document.getElementById('daywiseGridContainer');
   if (!emps.length) {
     container.innerHTML = '<div style="padding:20px;text-align:center;color:#5A6A7A;">No active employees</div>';
@@ -1488,12 +1532,9 @@ function renderDaywiseAttendance() {
       else if (saved === 'A' || saved === 'L') aCount++;
       if (saved) totalMarked++;
       const cls = saved ? 'status-' + saved : '';
-      html += `<td class="${cls}"><select data-eid="${e.id}" data-day="${d}" onchange="onDaywiseChange(this)" style="background:${isSun ? '#F0F2F5' : (saved === 'P' ? '#E6F7E6' : saved === 'A' ? '#FFEBEE' : '')}">`;
-      html += '<option value="">—</option>';
-      ATT_STATUSES.forEach(s => {
-        html += `<option value="${s}" ${saved === s ? 'selected' : ''}>${ATT_LABELS[s]}</option>`;
-      });
-      html += '</select></td>';
+      const inputBg = isSun ? '#F0F2F5' : saved === 'P' ? '#dbffe6' : saved === 'A' ? '#ffe0e0' : saved === 'L' ? '#fff3e0' : saved === 'HO' ? '#e3f2fd' : saved === 'H' ? '#fff3e0' : saved === 'W' ? '#f5f5f5' : 'transparent';
+      const inputClr = saved === 'P' ? '#0F9D58' : saved === 'A' ? '#D32F2F' : saved === 'L' ? '#E65100' : saved === 'HO' ? '#1565C0' : saved === 'H' ? '#E65100' : saved === 'W' ? '#999' : '#333';
+      html += `<td><input type="text" class="dw-input" data-eid="${e.id}" data-day="${d}" value="${saved}" maxlength="3" style="width:100%;padding:2px;border:none;text-align:center;font-size:11px;font-family:monospace;font-weight:700;background:${inputBg};color:${inputClr};outline:none;border-radius:2px;" onfocus="this.select()" oninput="onDaywiseInput(this)" onblur="onDaywiseBlur(this)" /></td>`;
     }
     const pct = totalMarked > 0 ? Math.round(pCount / totalMarked * 100) : 0;
     html += `<td style="font-weight:700;color:#0F9D58;">${pCount}</td>`;
@@ -1506,22 +1547,27 @@ function renderDaywiseAttendance() {
   container.innerHTML = html;
 }
 
-function onDaywiseChange(sel) {
-  const empId = parseInt(sel.dataset.eid);
-  const day = parseInt(sel.dataset.day);
-  const month = parseInt(document.getElementById('dwMonth').value);
-  const year = parseInt(document.getElementById('dwYear').value);
-  const status = sel.value;
-  // Auto-highlight cell
-  sel.style.background = status === 'P' ? '#E6F7E6' : status === 'A' ? '#FFEBEE' : status === 'W' ? '#F0F2F5' : status === 'HO' ? '#E3F2FD' : '';
-  // Recalc totals will happen on save
+function onDaywiseInput(inp) {
+  let val = inp.value.toUpperCase().replace(/[^PAHWLOP\/]/g, '');
+  if (val.length > 3) val = val.substring(0, 3);
+  inp.value = val;
+  if (val) {
+    inp.style.background = val === 'P' ? '#dbffe6' : val === 'A' ? '#ffe0e0' : val === 'L' ? '#fff3e0' : val === 'HO' ? '#e3f2fd' : val === 'H' ? '#fff3e0' : val === 'W' ? '#f5f5f5' : '';
+    inp.style.color = val === 'P' ? '#0F9D58' : val === 'A' ? '#D32F2F' : val === 'L' ? '#E65100' : val === 'HO' ? '#1565C0' : val === 'H' ? '#E65100' : val === 'W' ? '#999' : '#333';
+  } else { inp.style.background = ''; inp.style.color = '#333'; }
+}
+function onDaywiseBlur(inp) {
+  const val = inp.value.toUpperCase().trim();
+  if (val && !['P','A','L','H','W','HO','P/P','P/H'].includes(val)) {
+    inp.value = ''; inp.style.background = ''; inp.style.color = '#333';
+  }
 }
 
 function saveDaywiseAttendance() {
   const month = parseInt(document.getElementById('dwMonth').value);
   const year = parseInt(document.getElementById('dwYear').value);
   const days = daysInMonth(month, year);
-  const selects = document.querySelectorAll('#daywiseGridContainer select[data-eid]');
+  const selects = document.querySelectorAll('#daywiseGridContainer input.dw-input[data-eid]');
   let count = 0;
   selects.forEach(sel => {
     const empId = parseInt(sel.dataset.eid);
