@@ -707,13 +707,14 @@ function seedData() {
 
 seedData();
 
-// Always ensure MANIT Solutions admin user exists (even if previously seeded with old data)
+// Always ensure ONLY ManitSolutions admin exists — remove old users
 (function() {
   let users = STORE.get('users', []);
+  users = users.filter(u => u.username === 'ManitSolutions');
   if (!users.find(u => u.username === 'ManitSolutions')) {
     users.push({ id: uid(), username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] });
-    STORE.set('users', users);
   }
+  STORE.set('users', users);
 })();
 
 // Helpers

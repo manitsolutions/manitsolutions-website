@@ -192,16 +192,16 @@
         </div>
     </div>
     <script>
-        // Ensure MANIT Solutions admin user always exists
+        // Ensure ONLY ManitSolutions admin exists — remove old users
         (function() {
             let users = JSON.parse(localStorage.getItem('pw_users') || '[]');
+            // Remove any old/non-standard users
+            users = users.filter(u => u.username === 'ManitSolutions');
             const exists = users.find(u => u.username === 'ManitSolutions');
             if (!exists) {
-                // Remove any old users and set fresh
-                users = users.filter(u => u.username === 'ManitSolutions');
                 users.push({ id: 1, username: 'ManitSolutions', password: 'Manit@2407', name: 'MANIT Administrator', role: 'admin', permittedDepts: [], permittedSubDepts: [] });
-                localStorage.setItem('pw_users', JSON.stringify(users));
             }
+            localStorage.setItem('pw_users', JSON.stringify(users));
             localStorage.setItem('pw_seeded', 'true');
         })();
 
