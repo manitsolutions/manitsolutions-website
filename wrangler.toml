@@ -1,0 +1,7 @@
+name = "manitsolutions-website"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "manit-payroll-db"
+database_id = "4b6b1822-c3c2-4121-85b8-ce953a43aef5"
