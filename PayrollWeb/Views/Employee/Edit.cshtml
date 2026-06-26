@@ -1,0 +1,190 @@
+@model Employee
+@{
+    ViewData["Title"] = "Edit Employee";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold" style="color: #0F1B3D;">Edit Employee</h4>
+    <a asp-action="Index" class="btn btn-outline-secondary rounded-3">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 d-none"></div>
+
+            <!-- Row 1: Employee Code, Employee Name -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label asp-for="EmployeeCode" class="form-label fw-medium small"></label>
+                    <input asp-for="EmployeeCode" class="form-control" />
+                    <span asp-validation-for="EmployeeCode" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="EmployeeName" class="form-label fw-medium small"></label>
+                    <input asp-for="EmployeeName" class="form-control" />
+                    <span asp-validation-for="EmployeeName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Gender" class="form-label fw-medium small"></label>
+                    <select asp-for="Gender" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- Row 2: First Name, Last Name -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="FirstName" class="form-label fw-medium small"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="LastName" class="form-label fw-medium small"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- Row 3: Aadhar, Pan, Mobile, Email -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label asp-for="AadharNumber" class="form-label fw-medium small"></label>
+                    <input asp-for="AadharNumber" class="form-control" />
+                    <span asp-validation-for="AadharNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PanNumber" class="form-label fw-medium small"></label>
+                    <input asp-for="PanNumber" class="form-control" />
+                    <span asp-validation-for="PanNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="MobileNumber" class="form-label fw-medium small"></label>
+                    <input asp-for="MobileNumber" class="form-control" />
+                    <span asp-validation-for="MobileNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="EmailId" class="form-label fw-medium small"></label>
+                    <input asp-for="EmailId" class="form-control" />
+                    <span asp-validation-for="EmailId" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- Row 4: Department, SubDepartment, Designation, Status -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label asp-for="DepartmentId" class="form-label fw-medium small"></label>
+                    <select asp-for="DepartmentId" id="DepartmentId" class="form-select"
+                            asp-items="@(ViewBag.Departments is List<Department> depts
+                                ? new SelectList(depts, nameof(Department.Id), nameof(Department.Name))
+                                : new SelectList(Enumerable.Empty<SelectListItem>()))">
+                        <option value="">-- Select --</option>
+                    </select>
+                    <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="SubDepartmentId" class="form-label fw-medium small"></label>
+                    <select asp-for="SubDepartmentId" id="SubDepartmentId" class="form-select">
+                        <option value="">-- Select --</option>
+                    </select>
+                    <span asp-validation-for="SubDepartmentId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Designation" class="form-label fw-medium small"></label>
+                    <input asp-for="Designation" class="form-control" />
+                    <span asp-validation-for="Designation" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Status" class="form-label fw-medium small"></label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                    <span asp-validation-for="Status" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- Row 5: Basic Salary, Bank Name, Account Number, IFSC -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label asp-for="BasicSalary" class="form-label fw-medium small"></label>
+                    <input asp-for="BasicSalary" class="form-control" />
+                    <span asp-validation-for="BasicSalary" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="BankName" class="form-label fw-medium small"></label>
+                    <input asp-for="BankName" class="form-control" />
+                    <span asp-validation-for="BankName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="AccountNumber" class="form-label fw-medium small"></label>
+                    <input asp-for="AccountNumber" class="form-control" />
+                    <span asp-validation-for="AccountNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="IfscCode" class="form-label fw-medium small"></label>
+                    <input asp-for="IfscCode" class="form-control" />
+                    <span asp-validation-for="IfscCode" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- Row 6: Joining Date -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label asp-for="JoiningDate" class="form-label fw-medium small"></label>
+                    <input asp-for="JoiningDate" class="form-control" placeholder="yyyy-MM-dd" />
+                    <span asp-validation-for="JoiningDate" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-3 px-4">
+                    <i class="bi bi-save me-1"></i> Save Changes
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-3 px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const subDepts = @Html.Raw(ViewBag.SubDepartmentsJson ?? "[]");
+        const selectedSubDept = @Model.SubDepartmentId;
+
+        document.getElementById('DepartmentId')?.addEventListener('change', function () {
+            const deptId = parseInt(this.value);
+            const sdSelect = document.getElementById('SubDepartmentId');
+            sdSelect.innerHTML = '<option value="">-- Select --</option>';
+
+            if (!isNaN(deptId) && deptId > 0) {
+                subDepts.filter(sd => sd.DepartmentId === deptId).forEach(sd => {
+                    const opt = document.createElement('option');
+                    opt.value = sd.Id;
+                    opt.textContent = sd.Name;
+                    if (sd.Id === selectedSubDept) opt.selected = true;
+                    sdSelect.appendChild(opt);
+                });
+            }
+        });
+
+        // Trigger change on load to pre-select current sub-department
+        document.addEventListener('DOMContentLoaded', function () {
+            const deptSelect = document.getElementById('DepartmentId');
+            if (deptSelect) {
+                deptSelect.dispatchEvent(new Event('change'));
+            }
+        });
+    </script>
+}

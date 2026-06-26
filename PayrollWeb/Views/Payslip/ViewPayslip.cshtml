@@ -1,0 +1,156 @@
+@model SalaryRecord
+@{
+    ViewData["Title"] = "Payslip";
+    var monthName = new DateTime(Model.Year, Model.Month, 1).ToString("MMMM yyyy");
+}
+
+<div class="mb-3">
+    <a asp-action="Index" asp-route-year="@Model.Year" asp-route-month="@Model.Month"
+       class="btn btn-outline-secondary btn-sm rounded-3">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+    <button onclick="window.print()" class="btn btn-primary btn-sm rounded-3 ms-2">
+        <i class="bi bi-printer me-1"></i> Print
+    </button>
+</div>
+
+<!-- Payslip Card -->
+<div class="card border-0 shadow-sm rounded-4" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-body p-5">
+
+        <!-- Company Header -->
+        <div class="text-center border-bottom pb-3 mb-4">
+            <h3 class="fw-bold mb-1" style="color: #0F1B3D;">@ViewBag.CompanyName</h3>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.CompanyAddress as string))
+            {
+                <p class="text-muted mb-0 small">@ViewBag.CompanyAddress</p>
+            }
+        </div>
+
+        <!-- Payslip Title -->
+        <div class="text-center mb-4">
+            <h5 class="fw-bold text-uppercase" style="color: #1A4DFF;">Payslip - @monthName</h5>
+        </div>
+
+        <!-- Employee Details -->
+        <div class="bg-light rounded-3 p-3 mb-4">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Employee Code</small>
+                    <span class="fw-medium">@Model.EmployeeCode</span>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Employee Name</small>
+                    <span class="fw-medium">@Model.EmployeeName</span>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Department</small>
+                    <span class="fw-medium">@Model.Department</span>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Sub Department</small>
+                    <span class="fw-medium">@Model.SubDepartment</span>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Bank Account</small>
+                    <span class="fw-medium">@Model.BankName - @Model.AccountNumber</span>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Present Days</small>
+                    <span class="fw-medium">@Model.PresentDays</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Earnings Table -->
+        <h6 class="fw-bold mb-2" style="color: #0F1B3D;">Earnings</h6>
+        <table class="table table-bordered mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th>Component</th>
+                    <th class="text-end" style="width:140px;">Amount (&pi;)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Basic Salary</td>
+                    <td class="text-end fw-medium">@Model.BasicSalary.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td>Dearness Allowance (DA)</td>
+                    <td class="text-end fw-medium">@Model.Da.ToString("N2")</td>
+                </tr>
+                <tr class="table-primary fw-bold">
+                    <td>Gross Salary</td>
+                    <td class="text-end">@Model.GrossSalary.ToString("N2")</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Deductions Table -->
+        <h6 class="fw-bold mb-2" style="color: #0F1B3D;">Deductions</h6>
+        <table class="table table-bordered mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th>Component</th>
+                    <th class="text-end" style="width:140px;">Amount (&pi;)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Provident Fund (PF)</td>
+                    <td class="text-end fw-medium">@Model.Pf.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td>Employee State Insurance (ESIC)</td>
+                    <td class="text-end fw-medium">@Model.Esic.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td>Professional Tax (PT)</td>
+                    <td class="text-end fw-medium">@Model.Pt.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td>Advance</td>
+                    <td class="text-end fw-medium">@Model.Advance.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td>Penalty</td>
+                    <td class="text-end fw-medium">@Model.Penalty.ToString("N2")</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Net Salary -->
+        <div class="bg-primary bg-opacity-10 rounded-3 p-3 text-center">
+            <h5 class="fw-bold mb-0" style="color: #0F1B3D;">
+                Net Salary: ₹ @Model.NetSalary.ToString("N2")
+            </h5>
+            @if (Model.IsPaid)
+            {
+                <span class="badge bg-success mt-2">Paid</span>
+            }
+            else if (Model.IsUnpaid)
+            {
+                <span class="badge bg-danger mt-2">Unpaid</span>
+            }
+            else
+            {
+                <span class="badge bg-warning text-dark mt-2">Pending</span>
+            }
+        </div>
+
+    </div>
+</div>
+
+<!-- Print Styles -->
+@section Styles {
+    <style>
+        @@media print {
+            .sidebar, .topbar, .btn { display: none !important; }
+            .main-content { margin-left: 0 !important; }
+            .page-content { padding: 0 !important; }
+            .card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
+            body { background: #fff !important; }
+        }
+    </style>
+}

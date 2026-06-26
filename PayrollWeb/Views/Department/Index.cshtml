@@ -1,0 +1,84 @@
+@model List<Department>
+@{
+    ViewData["Title"] = "Departments";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold" style="color: #0F1B3D;">Departments</h4>
+    <a asp-action="Create" class="btn btn-primary rounded-3 px-4">
+        <i class="bi bi-plus-lg me-1"></i> Add Department
+    </a>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
+        <i class="bi bi-check-circle me-1"></i> @successMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] is string errorMsg)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i> @errorMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">#</th>
+                        <th>Department Name</th>
+                        <th>Sub Departments</th>
+                        <th class="text-center" style="width:140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count > 0)
+                    {
+                        int i = 1;
+                        foreach (var dept in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 text-muted">@(i++)</td>
+                                <td class="fw-medium">@dept.Name</td>
+                                <td>
+                                    <span class="badge bg-info bg-opacity-10 text-info rounded-pill">
+                                        @dept.SubDepartments.Count sub-department(s)
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="Edit" asp-route-id="@dept.Id"
+                                       class="btn btn-sm btn-outline-primary rounded-3 me-1" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@dept.Id" method="post"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Delete department @dept.Name?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-3" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-5">
+                                <i class="bi bi-building fs-2 d-block mb-2 text-secondary"></i>
+                                No departments found. <a asp-action="Create" class="text-primary">Create one</a>.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

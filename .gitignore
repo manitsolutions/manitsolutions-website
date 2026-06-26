@@ -1,0 +1,6 @@
+﻿
+# PayrollWeb
+PayrollWeb/bin/
+PayrollWeb/obj/
+PayrollWeb/*.user
+PayrollWeb/app.db

@@ -1,0 +1,127 @@
+@model List<MonthlyAttendanceRow>
+@{
+    ViewData["Title"] = "Monthly Attendance";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold" style="color: #0F1B3D;">Monthly Attendance</h4>
+    <a asp-action="Index" class="btn btn-outline-primary rounded-3 px-4">
+        <i class="bi bi-calendar-day me-1"></i> Daily View
+    </a>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
+        <i class="bi bi-check-circle me-1"></i> @successMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] is string errorMsg)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i> @errorMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Year / Month Selector -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <form method="get" class="row g-2 align-items-end">
+                    <div class="col-auto">
+                        <label class="form-label small fw-medium text-muted">Year</label>
+                        <select name="year" class="form-select form-select-sm">
+                            @for (int y = DateTime.Now.Year - 5; y <= DateTime.Now.Year + 1; y++)
+                            {
+                                <option value="@y" selected="@(y == ViewBag.Year)">@y</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label small fw-medium text-muted">Month</label>
+                        <select name="month" class="form-select form-select-sm">
+                            @for (int m = 1; m <= 12; m++)
+                            {
+                                <option value="@m" selected="@(m == ViewBag.Month)">
+                                    @(new DateTime(2000, m, 1).ToString("MMMM"))
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-sm px-3 rounded-3 mt-4">
+                            <i class="bi bi-search me-1"></i> Load
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-8 text-md-end mt-3 mt-md-0">
+                <form method="post" asp-action="ComputeMonthly" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="year" value="@ViewBag.Year" />
+                    <input type="hidden" name="month" value="@ViewBag.Month" />
+                    <button type="submit" class="btn btn-success btn-sm px-3 rounded-3"
+                            onclick="return confirm('Compute monthly attendance from daily records for @ViewBag.Month/@ViewBag.Year? Existing data will be overwritten.');">
+                        <i class="bi bi-calculator me-1"></i> Compute from Daily
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Attendance Table -->
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Employee Code</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th class="text-center">Total Days</th>
+                        <th class="text-center">Present Days</th>
+                        <th class="text-center">Days Marked</th>
+                        <th class="text-center">Absent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count > 0)
+                    {
+                        foreach (var row in Model)
+                        {
+                            var absent = row.TotalDays - row.PresentDays;
+                            <tr>
+                                <td class="ps-4 fw-medium">@row.EmployeeCode</td>
+                                <td>@row.EmployeeName</td>
+                                <td>@row.Department</td>
+                                <td class="text-center">@row.TotalDays</td>
+                                <td class="text-center">
+                                    <span class="badge bg-success rounded-pill">@row.PresentDays</span>
+                                </td>
+                                <td class="text-center">@row.WorkingDays</td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger rounded-pill">@absent</span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                                <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
+                                No attendance data for @ViewBag.Month/@ViewBag.Year.
+                                Click <strong>"Compute from Daily"</strong> above to generate.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

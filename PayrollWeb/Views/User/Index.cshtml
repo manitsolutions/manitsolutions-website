@@ -1,0 +1,58 @@
+@model IEnumerable<PayrollWeb.Models.User>
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">User Management</h4>
+    <a asp-action="Create" class="btn btn-primary">+ Add User</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Designation</th>
+                    <th>Mobile</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.UserId</td>
+                        <td><strong>@user.Name</strong></td>
+                        <td>@user.Designation</td>
+                        <td>@user.MobileNumber</td>
+                        <td>
+                            @if (user.IsAdmin)
+                            {
+                                <span class="badge bg-primary">Admin</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">User</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete user @user.UserId?');">
+                                <input type="hidden" name="id" value="@user.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="text-center py-4 text-muted">No users found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
