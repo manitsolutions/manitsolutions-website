@@ -154,6 +154,22 @@ tr:last-child td { border-bottom: none; }
 .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
 .form-section { border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 14px; background: #FAFBFC; }
 .form-section h4 { font-size: 12px; font-weight: 700; color: #0F1B3D; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #E2E8F0; text-transform: uppercase; letter-spacing: 0.4px; }
+/* ───────── DAY-WISE ATTENDANCE GRID ───────── */
+.daywise-wrap { overflow-x: auto; }
+.daywise-grid { border-collapse: collapse; min-width: 100%; font-size: 11px; }
+.daywise-grid th { background: #0F1B3D; color: #fff; padding: 6px 4px; text-align: center; font-size: 10px; font-weight: 600; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 2; }
+.daywise-grid th.fixed-col { position: sticky; left: 0; z-index: 3; background: #0F1B3D; }
+.daywise-grid td { padding: 3px 2px; text-align: center; border: 1px solid #E2E8F0; }
+.daywise-grid td.fixed-col { position: sticky; left: 0; background: #fff; z-index: 1; text-align: left; padding: 3px 8px; font-weight: 500; }
+.daywise-grid tr:hover td { background: #F0F4FF; }
+.daywise-grid tr:hover td.fixed-col { background: #F0F4FF; }
+.daywise-grid select { width: 100%; padding: 2px; border: 1px solid #D0D5DD; border-radius: 4px; font-size: 10px; font-family: inherit; text-align: center; background: #fff; cursor: pointer; }
+.daywise-grid select:focus { border-color: #1A4DFF; outline: none; }
+.daywise-grid .status-P { background: #E6F7E6; color: #0F9D58; font-weight: 700; }
+.daywise-grid .status-A { background: #FFEBEE; color: #D32F2F; font-weight: 700; }
+.daywise-grid .status-H { background: #FFF3E0; color: #E65100; font-weight: 700; }
+.daywise-grid .status-W { background: #F0F2F5; color: #5A6A7A; }
+.daywise-grid .status-HO { background: #E3F2FD; color: #1565C0; font-weight: 700; }
 /* ───────── MODAL ───────── */
 .modal-overlay {
   display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -279,7 +295,7 @@ tr:last-child td { border-bottom: none; }
           <input type="text" placeholder="Search name, ID, department..." oninput="renderEmployees(this.value)" />
           <select onchange="renderEmployees(document.querySelector('#page-employees .search-bar input').value)" id="empDeptFilter"><option value="">All Depts</option></select>
         </div>
-        <table><thead><tr><th>Code</th><th>Name</th><th>Department</th><th>Designation</th><th>Basic</th><th>Status</th><th>Action</th></tr></thead><tbody id="employeesTableBody"></tbody></table>
+        <table><thead><tr><th style="width:44px;">Photo</th><th>Code</th><th>Name</th><th>Department</th><th>Designation</th><th>Basic</th><th>Status</th><th>Action</th></tr></thead><tbody id="employeesTableBody"></tbody></table>
       </div>
     </div>
 
@@ -313,6 +329,21 @@ tr:last-child td { border-bottom: none; }
           </div>
         </div>
         <table><thead><tr><th>Employee</th><th>Present</th><th>Absent</th><th>Late</th><th>Holiday</th><th>Total</th><th>%</th></tr></thead><tbody id="monthlyAttTableBody"></tbody></table>
+      </div>
+      <!-- Day-Wise Attendance Grid -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Day-Wise Attendance</h3>
+          <div class="actions">
+            <select id="dwMonth" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderDaywiseAttendance()"></select>
+            <select id="dwYear" style="padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderDaywiseAttendance()"></select>
+            <button class="btn btn-secondary btn-sm" onclick="renderDaywiseAttendance()">⟳ Refresh</button>
+            <button class="btn btn-success btn-sm" onclick="saveDaywiseAttendance()">💾 Save All</button>
+          </div>
+        </div>
+        <div class="daywise-wrap" id="daywiseGridContainer">
+          <div style="padding:20px;text-align:center;color:#5A6A7A;">Loading...</div>
+        </div>
       </div>
     </div>
 
@@ -389,18 +420,35 @@ tr:last-child td { border-bottom: none; }
     <input type="hidden" id="empEditId" />
 
     <!-- SECTION 1: Employment Details -->
-    <div class="form-section">
-      <h4>📋 Employment Details</h4>
-      <div class="form-grid col3">
-        <div class="form-group"><label>Employee Code</label><input type="text" id="empCode" placeholder="Auto" /></div>
-        <div class="form-group"><label>Status</label><select id="empStatus"><option>Active</option><option>Inactive</option></select></div>
-        <div class="form-group"><label>Joining Date</label><input type="date" id="empJoiningDate" /></div>
-        <div class="form-group"><label>Department *</label><select id="empDepartment"></select></div>
-        <div class="form-group"><label>Sub Department *</label><select id="empSubDepartment"><option value="">—</option></select></div>
-        <div class="form-group"><label>Designation</label><input type="text" id="empDesignation" placeholder="Designation" /></div>
-        <div class="form-group"><label>PF No</label><input type="text" id="empPfNo" placeholder="PF Number" /></div>
-        <div class="form-group"><label>UAN No</label><input type="text" id="empUanNo" placeholder="UAN Number" /></div>
-        <div class="form-group"><label>ESIC No</label><input type="text" id="empEsicNo" placeholder="ESIC Number" /></div>
+    <div style="display:flex;gap:16px;">
+      <div style="flex:1;">
+        <div class="form-section">
+          <h4>📋 Employment Details</h4>
+          <div class="form-grid col3">
+            <div class="form-group"><label>Employee Code</label><input type="text" id="empCode" placeholder="Auto" /></div>
+            <div class="form-group"><label>Status</label><select id="empStatus"><option>Active</option><option>Inactive</option></select></div>
+            <div class="form-group"><label>Joining Date</label><input type="date" id="empJoiningDate" /></div>
+            <div class="form-group"><label>Department *</label><select id="empDepartment"></select></div>
+            <div class="form-group"><label>Sub Department *</label><select id="empSubDepartment"><option value="">—</option></select></div>
+            <div class="form-group"><label>Designation</label><input type="text" id="empDesignation" placeholder="Designation" /></div>
+            <div class="form-group"><label>PF No</label><input type="text" id="empPfNo" placeholder="PF Number" /></div>
+            <div class="form-group"><label>UAN No</label><input type="text" id="empUanNo" placeholder="UAN Number" /></div>
+            <div class="form-group"><label>ESIC No</label><input type="text" id="empEsicNo" placeholder="ESIC Number" /></div>
+          </div>
+        </div>
+      </div>
+      <div style="width:180px;flex-shrink:0;">
+        <div class="form-section" style="text-align:center;">
+          <h4>📸 Photo</h4>
+          <div style="width:150px;height:150px;border:2px dashed #E2E8F0;border-radius:10px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#F7F9FC;position:relative;" id="photoPreviewBox">
+            <img id="empPhotoPreview" style="max-width:100%;max-height:100%;display:none;" />
+            <span id="photoPlaceholder" style="font-size:40px;color:#C0C8D4;">📷</span>
+          </div>
+          <input type="file" id="empPhotoInput" accept="image/jpeg,image/png" style="display:none;" onchange="handlePhotoUpload(event)" />
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('empPhotoInput').click()" style="width:100%;">Choose Photo</button>
+          <button class="btn btn-xs btn-secondary" onclick="clearPhoto()" style="margin-top:4px;width:100%;">Remove</button>
+          <div style="font-size:9px;color:#5A6A7A;margin-top:4px;">Max 200KB, JPG/PNG</div>
+        </div>
       </div>
     </div>
 
@@ -645,7 +693,7 @@ function showPage(name) {
   if (name === 'dashboard') renderDashboard();
   else if (name === 'employees') { populateDeptFilter(); renderEmployees(); }
   else if (name === 'departments') renderDepartments();
-  else if (name === 'attendance') renderAttendance();
+  else if (name === 'attendance') { renderAttendance(); renderMonthlyAttendance(); renderDaywiseAttendance(); }
   else if (name === 'salary') renderSalary();
   else if (name === 'payslip') renderPayslipList();
   else if (name === 'users') renderUsers();
@@ -749,11 +797,13 @@ function renderEmployees(filter) {
   if (deptId) list = list.filter(e => e.departmentId == deptId);
   
   document.getElementById('employeesTableBody').innerHTML = list.length === 0
-    ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:#5A6A7A;">No employees found</td></tr>'
+    ? '<tr><td colspan="8" style="text-align:center;padding:24px;color:#5A6A7A;">No employees found</td></tr>'
     : list.map(e => {
       const sal = calcSalary(e);
       const displayName = e.name || [e.firstName, e.middleName, e.lastName].filter(Boolean).join(' ');
+      const photoHtml = e.photoPath ? `<img src="${esc(e.photoPath)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" />` : `<span style="width:32px;height:32px;border-radius:50%;background:#E2E8F0;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#5A6A7A;">${(displayName[0]||'?').toUpperCase()}</span>`;
       return `<tr>
+        <td>${photoHtml}</td>
         <td>${esc(e.code)}</td>
         <td><strong>${esc(displayName)}</strong></td>
         <td>${esc(getDeptName(e.departmentId))}</td>
@@ -788,6 +838,48 @@ function nextEmpCode() {
   return 'EMP' + String(max + 1).padStart(3, '0');
 }
 
+// ─── PHOTO UPLOAD ─────────────────────────
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 200 * 1024) { showToast('Photo max 200KB', true); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const MAX = 200;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = h * MAX / w; w = MAX; }
+        else { w = w * MAX / h; h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      document.getElementById('empPhotoPreview').src = dataUrl;
+      document.getElementById('empPhotoPreview').style.display = 'block';
+      document.getElementById('photoPlaceholder').style.display = 'none';
+      document.getElementById('empPhotoPreview').dataset.photo = dataUrl;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPhoto() {
+  document.getElementById('empPhotoPreview').src = '';
+  document.getElementById('empPhotoPreview').style.display = 'none';
+  document.getElementById('photoPlaceholder').style.display = 'block';
+  document.getElementById('empPhotoPreview').dataset.photo = '';
+  document.getElementById('empPhotoInput').value = '';
+}
+
+function getPhotoDataUrl() {
+  return document.getElementById('empPhotoPreview').dataset.photo || '';
+}
+
 function populateSubDept(deptSelectId, subDeptSelectId, selectedVal) {
   const deptId = parseInt(document.getElementById(deptSelectId).value);
   const s = document.getElementById(subDeptSelectId);
@@ -801,6 +893,7 @@ function openAddEmployeeModal() {
   document.getElementById('empEditId').value = '';
   document.getElementById('empCode').value = nextEmpCode();
   document.getElementById('empCode').readOnly = true;
+  clearPhoto();
   document.getElementById('empJoiningDate').value = todayStr();
   document.getElementById('empFirstName').value = '';
   document.getElementById('empMiddleName').value = '';
@@ -858,6 +951,13 @@ function editEmployee(id) {
   document.getElementById('empEditId').value = id;
   document.getElementById('empCode').value = e.code || '';
   document.getElementById('empCode').readOnly = true;
+  // Load photo
+  if (e.photoPath) {
+    document.getElementById('empPhotoPreview').src = e.photoPath;
+    document.getElementById('empPhotoPreview').style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('empPhotoPreview').dataset.photo = e.photoPath;
+  } else { clearPhoto(); }
   document.getElementById('empJoiningDate').value = e.joiningDate || '';
   document.getElementById('empFirstName').value = e.firstName || '';
   document.getElementById('empMiddleName').value = e.middleName || '';
@@ -1001,6 +1101,7 @@ function saveEmployee() {
     basic,
     da,
     hra: parseFloat(document.getElementById('empHra').value) || 0,
+    photoPath: getPhotoDataUrl() || null,
     status: document.getElementById('empStatus').value,
   };
 
@@ -1218,6 +1319,120 @@ function renderMonthlyAttendance() {
 function computeMonthlyAttendance() {
   renderMonthlyAttendance();
   showToast('⟳ Monthly summary refreshed');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DAY-WISE ATTENDANCE GRID
+// ═══════════════════════════════════════════════════════════════════
+const ATT_STATUSES = ['P','A','L','H','W','HO'];
+const ATT_LABELS = { P:'P', A:'A', L:'L', H:'H', W:'W', HO:'HO' };
+
+function getDayStatus(empId, year, month, day) {
+  const ds = String(day).padStart(2,'0');
+  const ms = String(month+1).padStart(2,'0');
+  const dateStr = year + '-' + ms + '-' + ds;
+  const att = STORE.get('attendance', []);
+  const rec = att.find(a => a.employeeId === empId && a.date === dateStr);
+  return rec ? rec.status : '';
+}
+
+function setDayStatus(empId, year, month, day, status) {
+  const ds = String(day).padStart(2,'0');
+  const ms = String(month+1).padStart(2,'0');
+  const dateStr = year + '-' + ms + '-' + ds;
+  let att = STORE.get('attendance', []);
+  const idx = att.findIndex(a => a.employeeId === empId && a.date === dateStr);
+  if (status) {
+    const rec = { employeeId: empId, date: dateStr, status, time: '' };
+    if (idx >= 0) att[idx] = rec; else att.push(rec);
+  } else {
+    if (idx >= 0) att.splice(idx, 1);
+  }
+  STORE.set('attendance', att);
+}
+
+function renderDaywiseAttendance() {
+  const month = parseInt(document.getElementById('dwMonth').value);
+  const year = parseInt(document.getElementById('dwYear').value);
+  const days = daysInMonth(month, year);
+  const emps = STORE.get('employees', []).filter(e => e.status === 'Active');
+  const container = document.getElementById('daywiseGridContainer');
+  if (!emps.length) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:#5A6A7A;">No active employees</div>';
+    return;
+  }
+
+  let html = '<table class="daywise-grid"><thead><tr>';
+  html += '<th class="fixed-col" style="min-width:140px;">Employee</th>';
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(year, month, d);
+    const isSun = dt.getDay() === 0;
+    html += `<th style="${isSun?'background:#5A6A7A;':''}width:36px;">${d}${isSun?'☀':''}</th>`;
+  }
+  html += '<th style="width:50px;background:#0F9D58;">P</th>';
+  html += '<th style="width:50px;background:#D32F2F;">A</th>';
+  html += '<th style="width:50px;">%</th>';
+  html += '</tr></thead><tbody>';
+
+  emps.forEach(e => {
+    const dn = e.name || [e.firstName, e.middleName, e.lastName].filter(Boolean).join(' ');
+    html += `<tr><td class="fixed-col">${esc(dn)}</td>`;
+    let pCount = 0, aCount = 0, totalMarked = 0;
+    for (let d = 1; d <= days; d++) {
+      const dt = new Date(year, month, d);
+      const isSun = dt.getDay() === 0;
+      const saved = getDayStatus(e.id, year, month, d) || (isSun ? 'W' : '');
+      if (saved === 'P') pCount++;
+      else if (saved === 'A' || saved === 'L') aCount++;
+      if (saved) totalMarked++;
+      const cls = saved ? 'status-' + saved : '';
+      html += `<td class="${cls}"><select data-eid="${e.id}" data-day="${d}" onchange="onDaywiseChange(this)" style="background:${isSun ? '#F0F2F5' : (saved === 'P' ? '#E6F7E6' : saved === 'A' ? '#FFEBEE' : '')}">`;
+      html += '<option value="">—</option>';
+      ATT_STATUSES.forEach(s => {
+        html += `<option value="${s}" ${saved === s ? 'selected' : ''}>${ATT_LABELS[s]}</option>`;
+      });
+      html += '</select></td>';
+    }
+    const pct = totalMarked > 0 ? Math.round(pCount / totalMarked * 100) : 0;
+    html += `<td style="font-weight:700;color:#0F9D58;">${pCount}</td>`;
+    html += `<td style="font-weight:700;color:#D32F2F;">${aCount}</td>`;
+    html += `<td><span class="badge ${pct >= 75 ? 'badge-green' : pct >= 50 ? 'badge-yellow' : 'badge-red'}">${pct}%</span></td>`;
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function onDaywiseChange(sel) {
+  const empId = parseInt(sel.dataset.eid);
+  const day = parseInt(sel.dataset.day);
+  const month = parseInt(document.getElementById('dwMonth').value);
+  const year = parseInt(document.getElementById('dwYear').value);
+  const status = sel.value;
+  // Auto-highlight cell
+  sel.style.background = status === 'P' ? '#E6F7E6' : status === 'A' ? '#FFEBEE' : status === 'W' ? '#F0F2F5' : status === 'HO' ? '#E3F2FD' : '';
+  // Recalc totals will happen on save
+}
+
+function saveDaywiseAttendance() {
+  const month = parseInt(document.getElementById('dwMonth').value);
+  const year = parseInt(document.getElementById('dwYear').value);
+  const days = daysInMonth(month, year);
+  const selects = document.querySelectorAll('#daywiseGridContainer select[data-eid]');
+  let count = 0;
+  selects.forEach(sel => {
+    const empId = parseInt(sel.dataset.eid);
+    const day = parseInt(sel.dataset.day);
+    const status = sel.value;
+    setDayStatus(empId, year, month, day, status);
+    if (status) count++;
+  });
+  // Update the summary and totals
+  renderDaywiseAttendance();
+  renderMonthlyAttendance();
+  renderDashboard();
+  showToast('💾 ' + count + ' attendance entries saved');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1515,6 +1730,7 @@ document.addEventListener('DOMContentLoaded', function() {
   populateMonthYear('attMonth', 'attYear');
   populateMonthYear('salMonth', 'salYear');
   populateMonthYear('psMonth', 'psYear');
+  populateMonthYear('dwMonth', 'dwYear');
   
   renderDashboard();
 });
