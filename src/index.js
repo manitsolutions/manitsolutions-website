@@ -95,13 +95,16 @@ export default {
     }
 
     var response = await env.ASSETS.fetch(request);
-    // Override cache headers for all responses to prevent caching issues
-    response = new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: new Headers(response.headers)
-    });
-    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    // Override cache headers for HTML to prevent stale edge caching
+    var ct = response.headers.get('Content-Type') || '';
+    if (ct.includes('text/html')) {
+      response = new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: new Headers(response.headers)
+      });
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
     return response;
   }
 };
