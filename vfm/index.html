@@ -649,60 +649,56 @@ const FM_COLOUR_HEX = { Red:'#EF5350', Blue:'#42A5F5', Green:'#4CAF50', Yellow:'
   fmRenderColourPicker('fmColourPicker', 'Green', 'fmSelectColour');
   fmLoadDestinations();
 
-  // Auto-test: ?auto=1&dest=S11S&wb=VL0084860664707 — full create→add→lock
+  // Auto-test: ?auto=1&dest=S11S&wb=VL... — full create→add→lock
   (function autoTest() {
     var params = new URLSearchParams(window.location.search);
     if (params.get('auto') !== '1') return;
     var dest = params.get('dest') || 'S11S';
     var wb = params.get('wb');
-    var allDone = false;
+    var step = 0; // 0=init, 1=create, 2=addWB, 3=lock, 4=done
 
-    // Step 1: wait for destinations, create manifest
-    var step1 = setInterval(function() {
-      var sel = document.getElementById('fmDestination');
-      if (!sel || sel.options.length < 2 || sel.disabled) return;
-      clearInterval(step1);
-      navigate('forward-manifest');
-      setTimeout(function() {
+    setInterval(function() {
+      if (step > 3) return;
+      if (step === 0) {
         var sel = document.getElementById('fmDestination');
-        for (var i = 0; i < sel.options.length; i++) {
-          if (sel.options[i].text.trim() === dest || sel.options[i].text.trim().startsWith(dest + ' ')) {
-            sel.value = sel.options[i].value;
-            break;
-          }
-        }
-        sel.dispatchEvent(new Event('change'));
-        fmSelectColour('Red');
-        setTimeout(function() { fmCreate(); }, 300);
-      }, 500);
-    }, 500);
-
-    // Steps 2-4: if wb param given, add waybill + lock after create
-    if (!wb) return;
-    var step2 = setInterval(function() {
-      if (allDone) { clearInterval(step2); return; }
-      var inp = document.getElementById('fmWbInput');
-      var btn = document.getElementById('fmAddWbBtn');
-      // Wait for Phase 2: input visible, button enabled, no "Create" phase
-      var ph2 = document.getElementById('fmPhase2');
-      if (!ph2 || ph2.style.display === 'none' || !inp || !btn || btn.disabled) return;
-      clearInterval(step2);
-
-      // Step 3: add waybill
-      inp.value = wb;
-      btn.click();
-
-      // Step 4: wait for waybill added, then lock
-      var step3 = setInterval(function() {
-        if (allDone) { clearInterval(step3); return; }
-        var lockBtn = document.getElementById('fmLockBtn');
-        if (!lockBtn || lockBtn.disabled) return;
-        clearInterval(step3);
+        if (!sel || sel.options.length < 2 || sel.disabled) return;
+        step = 1;
+        navigate('forward-manifest');
         setTimeout(function() {
-          lockBtn.click();
-          allDone = true;
+          var sel = document.getElementById('fmDestination');
+          for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].text.trim() === dest || sel.options[i].text.trim().startsWith(dest + ' ')) {
+              sel.value = sel.options[i].value;
+              break;
+            }
+          }
+          sel.dispatchEvent(new Event('change'));
+          fmSelectColour('Red');
+          setTimeout(function() { fmCreate(); step = 2; }, 300);
         }, 500);
-      }, 500);
+        return;
+      }
+      if (step === 2) {
+        if (!wb) { step = 4; return; }
+        var inp = document.getElementById('fmWbInput');
+        var btn = document.getElementById('fmAddWbBtn');
+        var ph2 = document.getElementById('fmPhase2');
+        if (!ph2 || ph2.style.display === 'none' || !inp || !btn || btn.disabled) return;
+        step = 3;
+        inp.value = wb;
+        btn.click();
+        return;
+      }
+      if (step === 3) {
+        if (!window._autoLockStart) window._autoLockStart = Date.now();
+        var lockBtn = document.getElementById('fmLockBtn');
+        if ((!lockBtn || lockBtn.disabled) && (Date.now() - window._autoLockStart < 12000)) return;
+        window._autoLockStart = 0;
+        step = 4;
+        if (lockBtn && !lockBtn.disabled) {
+          setTimeout(function() { lockBtn.click(); }, 500);
+        }
+      }
     }, 500);
   })();
 })();
@@ -1178,13 +1174,17 @@ async function fmAddWaybill() {
     btn.disabled = false; btn.textContent = 'Add';
     showToast('✅ ' + waybillNo + ' added', 'success');
   } catch(e) {
-    // Show error + offline fallback
-    showToast('❌ ' + e.message, 'error');
-    fmState.waybills.push({ waybill: waybillNo, shipper: '—', packetId: '—' });
-    document.getElementById('fmWbInput').value = '';
-    fmRenderWaybillList();
     btn.disabled = false; btn.textContent = 'Add';
-    showToast('⚠️ ' + waybillNo + ' added (local) - ' + e.message, 'info');
+    // Distinguish: API errors (Valmo rejected) vs network errors (offline)
+    if (e.message && e.message.startsWith('API error')) {
+      showToast('❌ ' + e.message, 'error');
+    } else {
+      // Network/offline error — add locally as fallback
+      fmState.waybills.push({ waybill: waybillNo, shipper: '—', packetId: '—' });
+      fmRenderWaybillList();
+      showToast('⚠️ ' + waybillNo + ' added (offline) - ' + e.message, 'info');
+    }
+    document.getElementById('fmWbInput').value = '';
   }
 }
 
@@ -1306,10 +1306,13 @@ async function fmLock() {
     fmRenderLocked();
     showToast('✅ Manifest locked!', 'success');
   } catch(e) {
-    showToast('❌ ' + e.message, 'error');
-    fmState.isLocked = true;
-    fmRenderLocked();
-    showToast('✅ Locked (offline) - ' + e.message, 'info');
+    if (e.message && e.message.startsWith('API error')) {
+      showToast('❌ ' + e.message, 'error');
+    } else {
+      fmState.isLocked = true;
+      fmRenderLocked();
+      showToast('✅ Locked (offline) - ' + e.message, 'info');
+    }
   }
   btn.disabled = false; btn.textContent = '🔒 Lock Manifest';
 }
