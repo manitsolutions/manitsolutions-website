@@ -649,19 +649,22 @@ const FM_COLOUR_HEX = { Red:'#EF5350', Blue:'#42A5F5', Green:'#4CAF50', Yellow:'
   fmRenderColourPicker('fmColourPicker', 'Green', 'fmSelectColour');
   fmLoadDestinations();
 
-  // Auto-test: ?auto=1 — wait for destinations then auto-create
+  // Auto-test: ?auto=1&dest=S11S&wb=VL0084860664707 — full create→add→lock
   (function autoTest() {
     var params = new URLSearchParams(window.location.search);
     if (params.get('auto') !== '1') return;
     var dest = params.get('dest') || 'S11S';
-    var interval = setInterval(function() {
+    var wb = params.get('wb');
+    var allDone = false;
+
+    // Step 1: wait for destinations, create manifest
+    var step1 = setInterval(function() {
       var sel = document.getElementById('fmDestination');
       if (!sel || sel.options.length < 2 || sel.disabled) return;
-      clearInterval(interval);
+      clearInterval(step1);
       navigate('forward-manifest');
       setTimeout(function() {
         var sel = document.getElementById('fmDestination');
-        // Find option by text match (starts with dest name, e.g. "S11S" matches "S11S" or "S11S — desc")
         for (var i = 0; i < sel.options.length; i++) {
           if (sel.options[i].text.trim() === dest || sel.options[i].text.trim().startsWith(dest + ' ')) {
             sel.value = sel.options[i].value;
@@ -671,6 +674,34 @@ const FM_COLOUR_HEX = { Red:'#EF5350', Blue:'#42A5F5', Green:'#4CAF50', Yellow:'
         sel.dispatchEvent(new Event('change'));
         fmSelectColour('Red');
         setTimeout(function() { fmCreate(); }, 300);
+      }, 500);
+    }, 500);
+
+    // Steps 2-4: if wb param given, add waybill + lock after create
+    if (!wb) return;
+    var step2 = setInterval(function() {
+      if (allDone) { clearInterval(step2); return; }
+      var inp = document.getElementById('fmWbInput');
+      var btn = document.getElementById('fmAddWbBtn');
+      // Wait for Phase 2: input visible, button enabled, no "Create" phase
+      var ph2 = document.getElementById('fmPhase2');
+      if (!ph2 || ph2.style.display === 'none' || !inp || !btn || btn.disabled) return;
+      clearInterval(step2);
+
+      // Step 3: add waybill
+      inp.value = wb;
+      btn.click();
+
+      // Step 4: wait for waybill added, then lock
+      var step3 = setInterval(function() {
+        if (allDone) { clearInterval(step3); return; }
+        var lockBtn = document.getElementById('fmLockBtn');
+        if (!lockBtn || lockBtn.disabled) return;
+        clearInterval(step3);
+        setTimeout(function() {
+          lockBtn.click();
+          allDone = true;
+        }, 500);
       }, 500);
     }, 500);
   })();
@@ -1073,7 +1104,7 @@ function fmToggleFast() {
   }
 }
 
-const FM_WAYBILL_RE = /^([A-Z]{2}\d{8,14}|\d{10,15})$/;
+const FM_WAYBILL_RE = /^([A-Z]{2,4}\d{8,14}|\d{10,15})$/;
 
 // ─── ADD WAYBILL ───
 async function fmAddWaybill() {
@@ -1089,7 +1120,7 @@ async function fmAddWaybill() {
 
   // Validate waybill format (VL + digits or all-numeric)
   if (!FM_WAYBILL_RE.test(waybillNo)) {
-    showToast('❌ Invalid waybill: ' + waybillNo + ' (format: 2 letters + 8-14 digits or 10-15 digits)', 'error');
+    showToast('❌ Invalid waybill: ' + waybillNo + ' (format: 2-4 letters + 8-14 digits or 10-15 digits)', 'error');
     return;
   }
 
