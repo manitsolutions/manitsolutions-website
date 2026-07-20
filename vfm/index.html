@@ -969,7 +969,7 @@ async function fmCreate() {
     fmState.createdFromExisting = false;
     fmShowPhase(2);
     fmRenderCreatedBanner();
-    showToast('⚠️ Manifest created (offline): ' + fmState.manifestId, 'info');
+    showToast('⚠️ Manifest created (offline): ' + fmState.manifestId + ' - ' + e.message, 'info');
   }
   btn.disabled = false; btn.textContent = '🚀 Create Manifest';
 }
