@@ -660,8 +660,15 @@ const FM_COLOUR_HEX = { Red:'#EF5350', Blue:'#42A5F5', Green:'#4CAF50', Yellow:'
       clearInterval(interval);
       navigate('forward-manifest');
       setTimeout(function() {
-        document.getElementById('fmDestination').value = dest;
-        document.getElementById('fmDestination').dispatchEvent(new Event('change'));
+        var sel = document.getElementById('fmDestination');
+        // Find option by text match (starts with dest name, e.g. "S11S" matches "S11S" or "S11S — desc")
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].text.trim() === dest || sel.options[i].text.trim().startsWith(dest + ' ')) {
+            sel.value = sel.options[i].value;
+            break;
+          }
+        }
+        sel.dispatchEvent(new Event('change'));
         fmSelectColour('Red');
         setTimeout(function() { fmCreate(); }, 300);
       }, 500);
