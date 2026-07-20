@@ -655,8 +655,8 @@ const FM_COLOUR_HEX = { Red:'#EF5350', Blue:'#42A5F5', Green:'#4CAF50', Yellow:'
     if (params.get('auto') === '1') {
       var sel = document.getElementById('fmDestination');
       if (!sel || sel.options.length < 2) { /* retry once */ return; }
-      var dest = params.get('dest') || 'PCSA';
-      var destId = dest === 'S11S' ? '5903731' : '5917625';
+      var dest = params.get('dest') || 'S11S';
+      var destId = dest;
       navigate('forward-manifest');
       setTimeout(function() {
         document.getElementById('fmDestination').value = destId;
