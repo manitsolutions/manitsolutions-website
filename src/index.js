@@ -94,7 +94,18 @@ export default {
       return Response.redirect(new URL('/vfm/login.html', request.url), 301);
     }
 
-    return env.ASSETS.fetch(request);
+    var response = await env.ASSETS.fetch(request);
+    // Add no-cache for HTML pages to prevent Cloudflare edge caching
+    var ct = response.headers.get('Content-Type') || '';
+    if (ct.includes('text/html')) {
+      response = new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: new Headers(response.headers)
+      });
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+    return response;
   }
 };
 
