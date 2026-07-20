@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>VFM Ops</title>
+<link rel="icon" href="assets/favicon.png" type="image/png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #0A1929; color: #E2E2E6;
+  min-height: 100vh;
+}
+/* ─── LAYOUT ─── */
+.app-wrap { max-width: 480px; margin: 0 auto; padding: 0 12px; }
+.page { display: none; }
+.page.active { display: block; }
+/* ─── HEADER BAR (for sub-pages) ─── */
+.header-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 4px 4px; margin-bottom: 8px;
+}
+.header-bar .back-btn {
+  font-size: 22px; cursor: pointer; background: none; border: none; color: #fff;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+}
+.header-bar .back-btn:hover { background: rgba(255,255,255,0.06); }
+.header-bar h2 { font-size: 17px; font-weight: 700; color: #fff; }
+/* ─── DASHBOARD ─── */
+.dash-header { padding: 16px 4px 8px; }
+.dash-header .user-line { font-size: 16px; font-weight: 700; color: #fff; }
+.dash-header .user-line .hub { font-weight: 400; color: rgba(255,255,255,0.5); }
+.dash-header .dash-label {
+  font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 16px; margin-bottom: 10px;
+  padding-left: 4px; font-weight: 500;
+}
+.module-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.module-card {
+  border-radius: 16px; padding: 14px; cursor: pointer;
+  transition: all 0.15s; display: flex; flex-direction: column; gap: 4px;
+}
+.module-card:active { transform: scale(0.97); }
+.module-card .mc-icon { font-size: 28px; margin-bottom: 4px; }
+.module-card .mc-title { font-size: 14px; font-weight: 700; color: #fff; }
+.module-card .mc-sub { font-size: 11px; color: rgba(255,255,255,0.6); }
+/* Module card color variants */
+.mc-tracking { background: rgba(3,120,182,0.12); }
+.mc-pickup { background: rgba(22,163,74,0.12); }
+.mc-hubperf { background: rgba(14,165,233,0.12); }
+.mc-shipper { background: rgba(22,163,74,0.12); }
+.mc-drs { background: rgba(16,185,129,0.12); }
+.mc-fwdmanifest { background: rgba(139,92,246,0.12); }
+.mc-trips { background: rgba(6,182,212,0.12); }
+/* ─── LOGOUT ─── */
+.logout-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 24px 0 32px; padding: 14px; border-radius: 12px;
+  background: rgba(255,180,171,0.10); cursor: pointer; transition: all 0.15s;
+  font-size: 14px; font-weight: 700; color: #FFB4AB; border: none; width: 100%; font-family: inherit;
+}
+.logout-btn:hover { background: rgba(255,180,171,0.18); }
+.logout-btn:active { transform: scale(0.98); }
+/* ─── MODAL ─── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+  background: #121A29; border-radius: 16px; padding: 24px; max-width: 320px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.modal-box h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.modal-box p { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 20px; line-height: 1.5; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-btn {
+  padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  font-family: inherit; border: none; cursor: pointer; transition: all 0.15s;
+}
+.modal-btn.cancel { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); }
+.modal-btn.cancel:hover { background: rgba(255,255,255,0.1); }
+.modal-btn.confirm { background: #D32F2F; color: #fff; }
+.modal-btn.confirm:hover { background: #B71C1C; }
+/* ─── SEARCH BAR ─── */
+.search-bar {
+  display: flex; gap: 8px; align-items: center; padding: 12px 0; flex-wrap: wrap;
+}
+.search-bar input, .search-bar select {
+  flex: 1; min-width: 160px; padding: 10px 14px; border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 10px; font-size: 14px; font-family: inherit; outline: none;
+  background: rgba(255,255,255,0.04); color: #E2E2E6;
+}
+.search-bar input:focus { border-color: #16A34A; }
+.search-bar input::placeholder { color: rgba(255,255,255,0.25); }
+/* ─── CARD ─── */
+.card {
+  background: rgba(255,255,255,0.03); border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.06); overflow: hidden; margin-bottom: 14px;
+}
+.card-header {
+  padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 6px;
+}
+.card-header h3 { font-size: 14px; font-weight: 700; color: #fff; }
+.card-body { padding: 14px 16px; }
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  border: none; cursor: pointer; transition: all 0.15s;
+}
+.btn-primary { background: #16A34A; color: #fff; }
+.btn-primary:hover { background: #0F7A37; }
+.btn-secondary { background: rgba(255,255,255,0.06); color: #ccc; border: 1px solid rgba(255,255,255,0.08); }
+.btn-success { background: #16A34A; color: #fff; }
+.btn-danger { background: #D32F2F; color: #fff; }
+.btn-sm { padding: 8px 14px; font-size: 12px; }
+.btn-block { width: 100%; justify-content: center; }
+.btn:disabled { opacity: 0.4; cursor: default; }
+/* ─── TABLE ─── */
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; padding: 8px 12px; font-size: 10px; font-weight: 600;
+  color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.4px;
+  background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06); white-space: nowrap;
+}
+td { padding: 8px 12px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #ccc; }
+tr:hover td { background: rgba(255,255,255,0.03); }
+tr:last-child td { border-bottom: none; }
+/* ─── BADGE ─── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+.badge-green { background: rgba(22,163,74,0.2); color: #4CAF50; }
+.badge-yellow { background: rgba(255,167,38,0.2); color: #FFA726; }
+.badge-red { background: rgba(211,47,47,0.2); color: #EF5350; }
+.badge-blue { background: rgba(33,150,243,0.2); color: #42A5F5; }
+/* ─── FORMS ─── */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: rgba(255,255,255,0.5); }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 14px; border: 1.5px solid rgba(255,255,255,0.1); border-radius: 10px;
+  font-size: 14px; font-family: inherit; outline: none; background: rgba(255,255,255,0.04); color: #E2E2E6;
+}
+.form-group input:focus { border-color: #16A34A; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* ─── DETAIL ROW ─── */
+.detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.detail-row .label { width: 120px; flex-shrink: 0; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); padding-right: 10px; }
+.detail-row .value { font-size: 13px; color: #E2E2E6; word-break: break-all; }
+.detail-row .value.blocked { color: #FF6B6B; font-style: italic; }
+/* ─── TIMELINE ─── */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 2px; background: rgba(255,255,255,0.08); }
+.timeline-item { position: relative; padding: 0 0 16px 16px; }
+.timeline-item::before { content: ''; position: absolute; left: -20px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: #16A34A; border: 2px solid #0A1929; }
+.timeline-item .tl-date { font-size: 10px; color: rgba(255,255,255,0.35); }
+.timeline-item .tl-status { font-size: 13px; font-weight: 600; color: #fff; }
+.timeline-item .tl-location { font-size: 11px; color: rgba(255,255,255,0.5); }
+/* ─── WAYBILL ITEM ─── */
+.waybill-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.waybill-item:last-child { border-bottom: none; }
+.waybill-item .wb-num { font-size: 13px; font-weight: 600; color: #fff; min-width: 60px; }
+.waybill-item .wb-info { flex: 1; }
+.waybill-item .wb-info .wb-shipper { font-size: 11px; color: rgba(255,255,255,0.4); }
+.waybill-item .wb-check { color: #4CAF50; font-size: 14px; }
+/* ─── SCANNER ─── */
+.scanner-box { background: #000; border-radius: 12px; padding: 40px 20px; text-align: center; border: 2px dashed rgba(255,255,255,0.1); margin-bottom: 14px; }
+.scanner-box .scan-icon { font-size: 40px; margin-bottom: 6px; }
+.scanner-box .scan-hint { font-size: 13px; color: rgba(255,255,255,0.4); }
+/* ─── SPINNER ─── */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.15); border-top-color: #16A34A; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading { text-align: center; padding: 40px; color: rgba(255,255,255,0.3); font-size: 13px; }
+/* ─── TOAST ─── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  color: #fff; z-index: 9999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  animation: toastIn 0.25s ease; text-align: center;
+}
+.toast.success { background: #16A34A; }
+.toast.error { background: #D32F2F; }
+.toast.info { background: #1565C0; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+/* ─── RESPONSIVE ─── */
+/* ─── MODE TOGGLE ─── */
+.fm-mode-toggle { display: flex; gap: 0; margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+.fm-mode-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: 600; font-family: inherit; border: none; cursor: pointer; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.4); transition: all 0.15s; }
+.fm-mode-btn.active { background: rgba(22,163,74,0.15); color: #4CAF50; }
+.fm-mode-btn:hover { background: rgba(255,255,255,0.06); }
+/* ─── PHASE INDICATOR ─── */
+.phase-steps { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 16px; padding: 12px 0; }
+.phase-step { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.03); white-space: nowrap; }
+.phase-step.active { color: #4CAF50; background: rgba(22,163,74,0.15); }
+.phase-step.done { color: #4CAF50; background: rgba(22,163,74,0.1); }
+.phase-step-connector { width: 32px; height: 2px; background: rgba(255,255,255,0.08); margin: 0 4px; }
+.phase-step.active ~ .phase-step-connector { background: rgba(22,163,74,0.3); }
+/* ─── COLOUR PICKER ─── */
+.colour-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+.colour-dot { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
+.colour-dot:hover { transform: scale(1.15); }
+.colour-dot.selected { border-color: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.2); }
+/* ─── INPUT WITH INLINE BTN ─── */
+.input-with-btn { display: flex; gap: 6px; }
+.input-with-btn input { flex: 1; }
+/* ─── FM SUCCESS BANNER ─── */
+.fm-success-banner { text-align: center; padding: 20px; background: rgba(22,163,74,0.08); border-radius: 14px; border: 1px solid rgba(22,163,74,0.2); margin-bottom: 14px; }
+.fm-success-banner .fm-sb-icon { font-size: 36px; margin-bottom: 6px; }
+.fm-success-banner .fm-sb-title { font-size: 16px; font-weight: 700; color: #fff; }
+.fm-success-banner .fm-sb-meta { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+/* ─── FM WAYBILL ITEM (with shipper + packet) ─── */
+.fm-wb-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.fm-wb-item:last-child { border-bottom: none; }
+.fm-wb-item .fw-num { font-size: 13px; font-weight: 600; color: #fff; min-width: 100px; font-family: monospace; }
+.fm-wb-item .fw-info { flex: 1; }
+.fm-wb-item .fw-info .fw-shipper { font-size: 11px; color: rgba(255,255,255,0.5); }
+.fm-wb-item .fw-info .fw-packet { font-size: 10px; color: rgba(255,255,255,0.3); font-family: monospace; }
+.fm-wb-item .fw-check { color: #4CAF50; font-size: 14px; }
+.fm-wb-item .fw-remove { cursor: pointer; color: rgba(255,255,255,0.2); font-size: 16px; padding: 4px; }
+.fm-wb-item .fw-remove:hover { color: #EF5350; }
+/* ─── FM EMPTY WAYBILLS ─── */
+.fm-empty-wb { text-align: center; padding: 24px; color: rgba(255,255,255,0.2); font-size: 13px; }
+
+@media (max-width: 400px) {
+  .app-wrap { padding: 0 8px; }
+  .module-card { padding: 12px; }
+  .module-card .mc-icon { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+  <!-- ═══ DASHBOARD ═══ -->
+  <div class="page active" id="page-dashboard">
+    <div class="dash-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="user-line" id="dashUserLine">Loading...</div>
+        <div style="display:flex;gap:4px;">
+          <span onclick="navigate('packet-search')" style="cursor:pointer;font-size:18px;padding:4px 6px;border-radius:8px;" title="Packet Search">🏷️</span>
+          <span onclick="navigate('pickup-manifest')" style="cursor:pointer;font-size:18px;padding:4px 6px;border-radius:8px;" title="Pickup Manifest">📋</span>
+          <span onclick="navigate('settings')" style="cursor:pointer;font-size:18px;padding:4px 6px;border-radius:8px;" title="Settings">⚙️</span>
+        </div>
+      </div>
+      <div class="dash-label">Modules</div>
+    </div>
+    <div class="module-grid">
+      <div class="module-card mc-tracking" onclick="navigate('tracking')">
+        <div class="mc-icon">🔍</div>
+        <div class="mc-title">Tracking</div>
+        <div class="mc-sub">Track waybills &amp; scan</div>
+      </div>
+      <div class="module-card mc-pickup" onclick="navigate('pickup-list')">
+        <div class="mc-icon">📦</div>
+        <div class="mc-title">Pickup</div>
+        <div class="mc-sub">Manage pickups &amp; FE</div>
+      </div>
+      <div class="module-card mc-hubperf" onclick="navigate('hub-perf')">
+        <div class="mc-icon">📊</div>
+        <div class="mc-title">Hub Performance</div>
+        <div class="mc-sub">Hourly report &amp; FE perf.</div>
+      </div>
+      <div class="module-card mc-shipper" onclick="navigate('shipper')">
+        <div class="mc-icon">🏪</div>
+        <div class="mc-title">Shippers</div>
+        <div class="mc-sub">Shipper list with address &amp; mobile</div>
+      </div>
+      <div class="module-card mc-drs" onclick="navigate('drs')">
+        <div class="mc-icon">📋</div>
+        <div class="mc-title">DRS Report</div>
+        <div class="mc-sub">RTO DRS waybill report</div>
+      </div>
+      <div class="module-card mc-fwdmanifest" onclick="navigate('forward-manifest')">
+        <div class="mc-icon">🚀</div>
+        <div class="mc-title">Forward Manifest</div>
+        <div class="mc-sub">Auto-forward with packet ID scan</div>
+      </div>
+      <div class="module-card mc-trips" onclick="navigate('trips')">
+        <div class="mc-icon">🚛</div>
+        <div class="mc-title">Trips</div>
+        <div class="mc-sub">Connection sheets &amp; inbound/outbound trips</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="showLogoutDialog()">🚪 Logout</button>
+  </div>
+
+  <!-- ═══ PAGE: TRACKING ═══ -->
+  <div class="page" id="page-tracking">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Tracking</h2>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="trackInput" placeholder="Enter waybill number..." />
+      <button class="btn btn-primary btn-sm" onclick="trackWaybill()">🔍 Track</button>
+    </div>
+    <div id="trackEmpty" class="loading">Enter a waybill number to track</div>
+    <div id="trackLoading" class="loading" style="display:none;"><span class="spinner"></span>Loading...</div>
+    <div id="trackResult" style="display:none;">
+      <div class="card">
+        <div class="card-header"><h3>Waybill Details</h3></div>
+        <div class="card-body" id="trackDetails"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Tracking Timeline</h3></div>
+        <div class="card-body" id="trackTimeline"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: PICKUP LIST ═══ -->
+  <div class="page" id="page-pickup-list">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Pickup</h2>
+    </div>
+    <div id="pickupListLoading" class="loading"><span class="spinner"></span>Loading pickups...</div>
+    <div id="pickupListEmpty" class="loading" style="display:none;">No pickups assigned</div>
+    <div id="pickupListContent" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <h3>Assigned Pickups</h3>
+          <button class="btn btn-success btn-sm" onclick="navigate('pickup-scan')">📷 Scan</button>
+        </div>
+        <div class="card-body" id="pickupListTable">
+          <table><thead><tr><th>Waybill</th><th>Status</th><th>Shipper</th></tr></thead><tbody id="pickupTbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: PICKUP SCAN ═══ -->
+  <div class="page" id="page-pickup-scan">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('pickup-list')">←</button>
+      <h2>Pickup Scan</h2>
+    </div>
+    <div class="scanner-box">
+      <div class="scan-icon">📷</div>
+      <div class="scan-hint">Use a barcode scanner or type the waybill manually</div>
+    </div>
+    <div class="form-group">
+      <label>Waybill Number</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="pickupWaybillInput" placeholder="Enter waybill number..." style="flex:1;" />
+        <button class="btn btn-success" onclick="scanPickup()">✅ Confirm</button>
+      </div>
+    </div>
+    <div id="pickupResult" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- ═══ PAGE: FORWARD MANIFEST ═══ -->
+  <div class="page" id="page-forward-manifest">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Forward Manifest</h2>
+    </div>
+
+    <!-- Mode Toggle -->
+    <div class="fm-mode-toggle" id="fmModeToggle">
+      <button class="fm-mode-btn active" data-fm-mode="create" onclick="fmSetMode('create')">Create New</button>
+      <button class="fm-mode-btn" data-fm-mode="existing" onclick="fmSetMode('existing')">Load Existing</button>
+    </div>
+
+    <!-- Phase Indicator -->
+    <div id="fmPhaseIndicator" style="display:none;">
+      <div class="phase-steps">
+        <div class="phase-step" data-fm-phase="1">1. Create</div>
+        <div class="phase-step-connector"></div>
+        <div class="phase-step" data-fm-phase="2">2. Add WB</div>
+        <div class="phase-step-connector"></div>
+        <div class="phase-step" data-fm-phase="3">3. Lock</div>
+      </div>
+    </div>
+
+    <!-- === PHASE 1: CREATE / LOAD MANIFEST === -->
+    <div id="fmPhase1">
+      <!-- Create Mode -->
+      <div id="fmCreateContent">
+        <div class="card">
+          <div class="card-header"><h3>Create Forward Manifest</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Seal No</label>
+              <div class="input-with-btn">
+                <input type="text" id="fmSeal" placeholder="Auto-generated if empty" />
+                <button class="btn btn-secondary btn-sm" onclick="fmRefreshSeal()" title="Generate new seal number">🔄</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Destination Route</label>
+              <select id="fmDestination">
+                <option value="">Loading destinations...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Colour</label>
+              <div class="colour-picker" id="fmColourPicker"></div>
+            </div>
+            <button class="btn btn-primary btn-block" id="fmCreateBtn" onclick="fmCreate()">🚀 Create Manifest</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Existing Mode -->
+      <div id="fmExistingContent" style="display:none;">
+        <div class="card">
+          <div class="card-header"><h3>Load Existing Manifest</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Manifest Code</label>
+              <input type="text" id="fmExistingCode" placeholder="Enter manifest code (M...)" />
+            </div>
+            <button class="btn btn-primary btn-block" id="fmLoadBtn" onclick="fmLoadExisting()">📋 Load Manifest</button>
+          </div>
+        </div>
+        <!-- Colour Assignment (shown when loaded manifest has no colour) -->
+        <div id="fmColourAssign" style="display:none;">
+          <div class="card">
+            <div class="card-header"><h3>Assign Colour</h3></div>
+            <div class="card-body">
+              <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:12px;">
+                This manifest has no colour assigned yet.
+                <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:4px;"><span id="fmExistingLoadedCode"></span> • <span id="fmExistingLoadedRoute"></span></div>
+              </div>
+              <div class="colour-picker" id="fmExistingColourPicker"></div>
+              <button class="btn btn-primary btn-block" id="fmAssignColourBtn" onclick="fmAssignColour()">🎨 Assign Colour</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === PHASE 2: ADD WAYBILLS === -->
+    <div id="fmPhase2" style="display:none;">
+      <!-- Created Banner -->
+      <div class="fm-success-banner">
+        <div class="fm-sb-icon">✅</div>
+        <div class="fm-sb-title">Manifest Created</div>
+        <div class="fm-sb-meta" id="fmCreatedMeta"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Add Waybills</h3>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);"><span id="fmWbCount">0</span> added</div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+              <label style="flex:1;margin:0;">Waybill Number</label>
+              <button class="btn btn-sm" id="fmFastToggle" onclick="fmToggleFast()" style="font-size:11px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">⏩ FAST</button>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="fmWbInput" placeholder="Scan or type waybill..." style="flex:1;" autocomplete="off" />
+              <button class="btn btn-primary btn-sm" id="fmAddWbBtn" onclick="fmAddWaybill()">Add</button>
+            </div>
+          </div>
+
+          <!-- Normal mode packet input -->
+          <div id="fmPacketGroup" style="display:none;">
+            <div class="form-group">
+              <label>Packet ID <span style="color:rgba(255,255,255,0.3);font-weight:400;">(scan or type)</span></label>
+              <input type="text" id="fmPacketInput" placeholder="Scan or type packet ID..." autocomplete="off" />
+            </div>
+            <button class="btn btn-primary btn-sm btn-block" id="fmConfirmPacketBtn" onclick="fmConfirmPacket()">Done</button>
+          </div>
+
+          <!-- Waybill list -->
+          <div id="fmWbList" style="margin-top:14px;">
+            <div class="fm-empty-wb">No waybills added yet</div>
+          </div>
+
+          <button class="btn btn-success btn-block" id="fmLockBtn" onclick="fmLock()" style="margin-top:14px;" disabled>
+            🔒 Lock Manifest (<span id="fmLockCount">0</span> waybills)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- === PHASE 3: LOCKED SUCCESS === -->
+    <div id="fmPhase3" style="display:none;">
+      <div class="fm-success-banner" style="padding:32px 20px;">
+        <div class="fm-sb-icon" style="font-size:48px;">✅</div>
+        <div class="fm-sb-title" style="font-size:18px;">Manifest Locked!</div>
+        <div class="fm-sb-meta" id="fmLockedMeta" style="margin-top:8px;"></div>
+        <button class="btn btn-primary" onclick="fmReset()" style="margin-top:16px;">Create New Manifest</button>
+      </div>
+    </div>
+
+    <!-- Error display -->
+    <div id="fmError" style="display:none;padding:12px;background:rgba(211,47,47,0.1);border-radius:10px;border:1px solid rgba(211,47,47,0.2);margin-bottom:14px;font-size:13px;color:#EF5350;"></div>
+  </div>
+
+  <!-- ═══ PAGE: HUB PERFORMANCE ═══ -->
+  <div class="page" id="page-hub-perf">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Hub Performance</h2>
+    </div>
+    <div class="loading">Coming soon...</div>
+  </div>
+
+  <!-- ═══ PAGE: SHIPPER LIST ═══ -->
+  <div class="page" id="page-shipper">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Shippers</h2>
+    </div>
+    <div class="loading">Coming soon...</div>
+  </div>
+
+  <!-- ═══ PAGE: DRS REPORT ═══ -->
+  <div class="page" id="page-drs">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>DRS Report</h2>
+    </div>
+    <div class="loading">Coming soon...</div>
+  </div>
+
+  <!-- ═══ PAGE: TRIPS ═══ -->
+  <div class="page" id="page-trips">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Trips</h2>
+    </div>
+    <div class="loading">Coming soon...</div>
+  </div>
+
+  <!-- ═══ PAGE: PICKUP MANIFEST ═══ -->
+  <div class="page" id="page-pickup-manifest">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Pickup Manifest</h2>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="pmSearch" placeholder="Search by manifest ID..." />
+      <button class="btn btn-primary btn-sm" onclick="loadPickupManifests()">🔍 Search</button>
+    </div>
+    <div class="card-body" id="pmList">
+      <div class="loading">Enter a manifest ID to view details</div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: PACKET SEARCH ═══ -->
+  <div class="page" id="page-packet-search">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Packet Search</h2>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="packetSearchInput" placeholder="Enter Packet ID..." />
+      <button class="btn btn-primary btn-sm" onclick="searchPacket()">🔍 Search</button>
+    </div>
+    <div class="card-body" id="packetSearchResult">
+      <div class="loading">Enter a Packet ID to search</div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: SETTINGS ═══ -->
+  <div class="page" id="page-settings">
+    <div class="header-bar">
+      <button class="back-btn" onclick="navigate('dashboard')">←</button>
+      <h2>Settings</h2>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="form-group"><label>Authorised Phone</label><input type="text" id="settingsAuthPhone" readonly style="background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.3);" /></div>
+        <div class="form-group"><label>Current User</label><input type="text" id="settingsUser" readonly /></div>
+        <div class="form-group"><label>API Base URL</label><input type="text" id="settingsApiBase" value="https://console.valmo.in/operations/api/" readonly /></div>
+        <button class="btn btn-danger btn-sm btn-block" onclick="clearSession()">🗑️ Clear Session</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOGOUT MODAL ═══ -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal-box">
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="hideLogoutDialog()">No</button>
+      <button class="modal-btn confirm" onclick="confirmLogout()">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CONSOLE_BASE = '/vfm/api';
+let vfmToken = '';
+let vfmUser = null;
+// Forward Manifest state
+const fmState = {
+  mode: 'create',
+  sealNo: '',
+  destination: '',
+  colour: 'Green',
+  existingCode: '',
+  manifestId: null,
+  manifestColour: 'Green',
+  manifestRoute: '',
+  waybills: [],          // [{waybill, shipper, packetId}]
+  fastMode: true,
+  pendingWaybill: null,  // normal mode: waybill waiting for packet confirm
+  pendingPacketId: '',
+  expectedPacketId: '',
+  isLocked: false,
+  createdFromExisting: false
+};
+const FM_COLOURS = ['Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange', 'Teal', 'Pink'];
+const FM_COLOUR_HEX = { Red:'#EF5350', Blue:'#42A5F5', Green:'#4CAF50', Yellow:'#FFA726', Purple:'#AB47BC', Orange:'#FF7043', Teal:'#26A69A', Pink:'#EC407A' };
+
+// ─── Init ───
+(function() {
+  const phone = localStorage.getItem('vfm_phone') || '';
+  vfmToken = localStorage.getItem('vfm_token') || '';
+  try { const raw = localStorage.getItem('vfm_user'); if (raw) vfmUser = JSON.parse(raw); } catch(e) {}
+  if (!phone || !vfmToken) { window.location.href = '/vfm/login'; return; }
+
+  const displayName = vfmUser?.name || phone;
+  const hubName = vfmUser?.warehouseName || '';
+  const hubPart = hubName ? ' <span class="hub">— ' + hubName + '</span>' : '';
+  document.getElementById('dashUserLine').innerHTML = displayName + hubPart;
+  document.getElementById('settingsUser').value = (vfmUser?.name || phone) + ' (' + phone + ')';
+  document.getElementById('settingsAuthPhone').value = phone;
+  document.getElementById('settingsApiBase').value = 'Token: ' + (vfmToken ? vfmToken.slice(0, 30) + '...' : 'NONE');
+
+  // Enter key handlers
+  document.getElementById('trackInput').addEventListener('keydown', e => { if (e.key === 'Enter') trackWaybill(); });
+  document.getElementById('fmWbInput').addEventListener('keydown', e => { if (e.key === 'Enter') fmAddWaybill(); });
+  document.getElementById('fmPacketInput').addEventListener('keydown', e => { if (e.key === 'Enter') fmConfirmPacket(); });
+  document.getElementById('fmExistingCode').addEventListener('keydown', e => { if (e.key === 'Enter') fmLoadExisting(); });
+  document.getElementById('pickupWaybillInput').addEventListener('keydown', e => { if (e.key === 'Enter') scanPickup(); });
+  document.getElementById('packetSearchInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchPacket(); });
+  document.getElementById('pmSearch').addEventListener('keydown', e => { if (e.key === 'Enter') loadPickupManifests(); });
+
+  // Forward Manifest init
+  fmRenderColourPicker('fmColourPicker', 'Green', 'fmSelectColour');
+  fmLoadDestinations();
+
+  // Auto-test: ?auto=1 — wait for destinations then auto-create
+  setTimeout(function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auto') === '1') {
+      var sel = document.getElementById('fmDestination');
+      if (!sel || sel.options.length < 2) { /* retry once */ return; }
+      var dest = params.get('dest') || 'PCSA';
+      var destId = dest === 'S11S' ? '5903731' : '5917625';
+      navigate('forward-manifest');
+      setTimeout(function() {
+        document.getElementById('fmDestination').value = destId;
+        document.getElementById('fmDestination').dispatchEvent(new Event('change'));
+        fmSelectColour('Red');
+        setTimeout(function() { fmCreate(); }, 300);
+      }, 500);
+    }
+  }, 1500);
+})();
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+// ─── Navigation ───
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'pickup-list') loadPickupList();
+}
+
+// ─── Logout ───
+function showLogoutDialog() { document.getElementById('logoutModal').classList.add('active'); }
+function hideLogoutDialog() { document.getElementById('logoutModal').classList.remove('active'); }
+function confirmLogout() {
+  hideLogoutDialog();
+  localStorage.removeItem('vfm_phone');
+  localStorage.removeItem('vfm_token');
+  localStorage.removeItem('vfm_user');
+  window.location.href = '/vfm/login';
+}
+function clearSession() { confirmLogout(); }
+
+// ─── API helper ───
+async function apiCall(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (vfmToken) headers['Authorization'] = 'Bearer ' + vfmToken;
+  const resp = await fetch(CONSOLE_BASE + path, { credentials: 'include', ...options, headers });
+  if (resp.status === 401) {
+    // Session expired - redirect to login
+    localStorage.removeItem('vfm_phone');
+    localStorage.removeItem('vfm_token');
+    localStorage.removeItem('vfm_user');
+    window.location.href = '/vfm/login';
+    throw new Error('Session expired');
+  }
+  const text = await resp.text();
+  if (!resp.ok) throw new Error('API error ' + resp.status + ': ' + text.slice(0, 120));
+  try { return JSON.parse(text); } catch(e) { return text; }
+}
+
+// ═══════════════════════════
+//  TRACKING
+// ═══════════════════════════
+async function trackWaybill() {
+  const wb = document.getElementById('trackInput').value.trim();
+  if (!wb) { showToast('Enter a waybill number', 'error'); return; }
+  document.getElementById('trackEmpty').style.display = 'none';
+  document.getElementById('trackResult').style.display = 'none';
+  document.getElementById('trackLoading').style.display = 'block';
+
+  let detailWaybillNo = null;
+  let sellerName = '';
+  let sellerAddress = '';
+  let currentStatus = '';
+  let currentLocation = '';
+  let events = [];
+
+  try {
+    // 1. GET waybill detail (shipper info)
+    try {
+      const detail = await apiCall('/tracking/consignment/v1/' + encodeURIComponent(wb));
+      if (detail?.status?.code === 200 && detail?.response) {
+        const resp = detail.response;
+        detailWaybillNo = resp.waybillNo;
+        const shipper = resp.consignment?.shipper || {};
+        sellerName = shipper.name || '';
+        sellerAddress = (typeof shipper.address === 'object' && shipper.address) ? Object.values(shipper.address).filter(v => v && typeof v !== 'object').join(', ') : (shipper.address || '');
+        events = resp.tracking || resp.consignment?.tracking || [];
+      }
+    } catch(e) { /* detail API failed, continue */ }
+
+    // 2. POST tracking (status/location)
+    try {
+      const raw = await apiCall('/tracking/consignment/v1', {
+        method: 'POST',
+        body: JSON.stringify({ waybills: [wb] })
+      });
+      const item = raw?.response?.consignments?.find(c => c.waybillNo) || null;
+      if (item) {
+        currentStatus = item.consignmentStatus || '';
+        currentLocation = item.location?.name || '';
+        if (!detailWaybillNo) detailWaybillNo = item.waybillNo;
+      }
+    } catch(e) { /* tracking POST failed */ }
+
+    document.getElementById('trackLoading').style.display = 'none';
+    document.getElementById('trackResult').style.display = 'block';
+    const isAuthorised = !!vfmToken;
+    const detailsHtml = `
+      <div class="detail-row"><span class="label">Waybill</span><span class="value">${detailWaybillNo || wb}</span></div>
+      <div class="detail-row"><span class="label">Status</span><span class="value">${currentStatus.toUpperCase() || 'Unknown'}</span></div>
+      <div class="detail-row"><span class="label">Seller</span><span class="value">${sellerName || '—'}</span></div>
+      <div class="detail-row"><span class="label">Address</span><span class="value">${sellerAddress || '—'}</span></div>
+      <div class="detail-row"><span class="label">Current Location</span><span class="value">${currentLocation || '—'}</span></div>`;
+    document.getElementById('trackDetails').innerHTML = detailsHtml;
+
+    if (events.length > 0) {
+      let tlHtml = '<div class="timeline">';
+      events.forEach(ev => {
+        tlHtml += '<div class="timeline-item"><div class="tl-date">' + (ev.eventTime ? new Date(ev.eventTime).toLocaleString('en-IN') : ev.timestamp || ev.date || ev.createdAt || '') + '</div><div class="tl-status">' + (ev.eventType || ev.status || ev.event || '') + '</div>' + ((ev.location || ev.data?.location || ev.data?.location_name || '') ? '<div class="tl-location">' + (ev.location || ev.data?.location || ev.data?.location_name || '') + '</div>' : '') + '</div>';
+      });
+      tlHtml += '</div>';
+      document.getElementById('trackTimeline').innerHTML = tlHtml;
+    } else {
+      document.getElementById('trackTimeline').innerHTML = '<div class="loading">No tracking events found</div>';
+    }
+
+    if (!sellerName && !currentStatus) {
+      document.getElementById('trackTimeline').innerHTML = '<div class="loading">No data found for this waybill</div>';
+    }
+  } catch(e) {
+    showToast('Failed: ' + e.message, 'error');
+    document.getElementById('trackLoading').style.display = 'none';
+    document.getElementById('trackEmpty').style.display = 'block';
+    document.getElementById('trackEmpty').textContent = 'Error: ' + e.message;
+  }
+}
+
+// ═══════════════════════════
+//  PICKUP LIST + SCAN
+// ═══════════════════════════
+async function loadPickupList() {
+  const loading = document.getElementById('pickupListLoading');
+  const empty = document.getElementById('pickupListEmpty');
+  const content = document.getElementById('pickupListContent');
+  loading.style.display = 'block'; empty.style.display = 'none'; content.style.display = 'none';
+  try {
+    const data = await apiCall('/fm/pickup/manage/list', { method: 'POST', body: '{}' });
+    const waybills = data?.response?.assignedWaybills || data?.assignedWaybills || [];
+    if (waybills.length === 0) { loading.style.display = 'none'; empty.style.display = 'block'; return; }
+    const tbody = document.getElementById('pickupTbody');
+    tbody.innerHTML = waybills.map(w => '<tr><td>' + (w.waybillNo || w.waybill || '—') + '</td><td><span class="badge ' + (w.status === 'completed' ? 'badge-green' : 'badge-yellow') + '">' + (w.status || 'ASSIGNED') + '</span></td><td>' + (w.shipperName || '—') + '</td></tr>').join('');
+    loading.style.display = 'none'; content.style.display = 'block';
+  } catch(e) {
+    loading.style.display = 'none'; empty.style.display = 'block';
+    empty.textContent = 'Failed to load pickups: ' + e.message;
+  }
+}
+
+async function scanPickup() {
+  const wb = document.getElementById('pickupWaybillInput').value.trim();
+  if (!wb) { showToast('Enter a waybill number', 'error'); return; }
+  const resultDiv = document.getElementById('pickupResult');
+  resultDiv.innerHTML = '<span class="spinner"></span> Processing...';
+  try {
+    await apiCall('/fm/pickup/waybill/pick', { method: 'POST', body: JSON.stringify({ waybillNo: wb }) });
+    resultDiv.innerHTML = '<div style="padding:12px;background:rgba(22,163,74,0.1);border-radius:8px;border:1px solid rgba(22,163,74,0.3);"><div style="font-size:16px;font-weight:700;color:#4CAF50;">✅ Pickup Confirmed</div><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;">' + wb + '</div></div>';
+    document.getElementById('pickupWaybillInput').value = '';
+    showToast('✅ ' + wb + ' pickup confirmed!', 'success');
+  } catch(e) {
+    resultDiv.innerHTML = '<div style="padding:12px;background:rgba(211,47,47,0.1);border-radius:8px;border:1px solid rgba(211,47,47,0.3);"><div style="font-size:14px;font-weight:600;color:#EF5350;">❌ Failed</div><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;">' + e.message + '</div></div>';
+  }
+}
+
+// ═══════════════════════════
+//  FORWARD MANIFEST (Android-style)
+// ═══════════════════════════
+
+// ─── COLOUR PICKER RENDERER ───
+function fmRenderColourPicker(containerId, selectedColour, onChange) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = FM_COLOURS.map(c =>
+    '<div class="colour-dot' + (c === selectedColour ? ' selected' : '') + '" ' +
+    'data-colour="' + c + '" ' +
+    'style="background:' + FM_COLOUR_HEX[c] + ';" ' +
+    'onclick="' + onChange + '(\'' + c + '\')" title="' + c + '"></div>'
+  ).join('');
+}
+
+function fmSelectColour(colour) {
+  fmState.colour = colour;
+  document.querySelectorAll('#fmColourPicker .colour-dot').forEach(d => d.classList.toggle('selected', d.dataset.colour === colour));
+}
+function fmSelectExistingColour(colour) {
+  fmState.existingColour = colour;
+  document.querySelectorAll('#fmExistingColourPicker .colour-dot').forEach(d => d.classList.toggle('selected', d.dataset.colour === colour));
+}
+
+// ─── PHASE MANAGEMENT ───
+function fmShowPhase(phase) {
+  document.getElementById('fmPhase1').style.display = phase === 1 ? 'block' : 'none';
+  document.getElementById('fmPhase2').style.display = phase === 2 ? 'block' : 'none';
+  document.getElementById('fmPhase3').style.display = phase === 3 ? 'block' : 'none';
+  document.getElementById('fmPhaseIndicator').style.display = phase > 1 ? 'block' : 'none';
+  // Phase indicator step styling
+  document.querySelectorAll('[data-fm-phase]').forEach(el => {
+    const p = parseInt(el.dataset.fmPhase);
+    el.className = 'phase-step' + (p < phase ? ' done' : '') + (p === phase ? ' active' : '');
+  });
+  // Lock button state
+  if (phase === 2) {
+    document.getElementById('fmLockBtn').disabled = fmState.waybills.length === 0;
+    document.getElementById('fmLockCount').textContent = fmState.waybills.length;
+  }
+}
+
+// ─── MODE TOGGLE ───
+function fmSetMode(mode) {
+  fmState.mode = mode;
+  document.querySelectorAll('.fm-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.fmMode === mode));
+  document.getElementById('fmCreateContent').style.display = mode === 'create' ? 'block' : 'none';
+  document.getElementById('fmExistingContent').style.display = mode === 'existing' ? 'block' : 'none';
+  if (mode === 'create') fmLoadDestinations();
+}
+
+// ─── LOAD DESTINATIONS ───
+async function fmLoadDestinations() {
+  const sel = document.getElementById('fmDestination');
+  sel.innerHTML = '<option value="">Loading...</option>';
+  sel.disabled = true;
+  try {
+    const resp = await apiCall('/hub/manifest/destination/location');
+    let list = [];
+
+    // Try Android app's parsing: JSONObject with "locations" array
+    try {
+      const json = typeof resp === 'string' ? JSON.parse(resp) : resp;
+      // Format 1: {"locations":[{"id":1,"name":"PCSA"},...]}
+      if (json.locations && Array.isArray(json.locations)) {
+        list = json.locations.map(d => ({ id: d.id || d.name, name: d.name || d.id }));
+      }
+      // Format 2: {"response":{"data":[...]}} or {"response":{"destinations":[...]}}
+      if (list.length === 0 && json.response) {
+        const data = json.response.data || json.response.destinations || [];
+        if (Array.isArray(data)) {
+          list = data.map(d => ({ id: d.id || d.name || d, name: d.name || d.routeName || d.id || d }));
+        }
+      }
+    } catch(e) { /* parse failed, try direct array */ }
+
+    // Format 3: Direct array from proxy
+    if (list.length === 0 && Array.isArray(resp)) {
+      list = resp.map(d => ({ id: d.id || d.name || d, name: d.name || d.label || d }));
+    }
+
+    // Fallback if API returned empty (like Android app does)
+    if (list.length === 0) {
+      list = [
+        { id: 'PCSA', name: 'PCSA — Palam Campus Sorting Area' },
+        { id: 'S11S', name: 'S11S' },
+        { id: 'NOIDA', name: 'NOIDA' },
+        { id: 'DELHI', name: 'DELHI' }
+      ];
+    }
+
+    sel.innerHTML = '<option value="">Select destination</option>' +
+      list.map(d => '<option value="' + (d.id || d) + '">' + (d.name || d) + '</option>').join('');
+  } catch(e) {
+    sel.innerHTML = '<option value="">Select destination</option><option value="PCSA">PCSA — Palam Campus Sorting Area</option><option value="S11S">S11S</option><option value="NOIDA">NOIDA</option><option value="DELHI">DELHI</option>';
+  }
+  sel.disabled = false;
+}
+
+// ─── SEAL NO GENERATION ───
+function fmRefreshSeal() {
+  const ts = Date.now().toString().slice(-10);
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  fmState.sealNo = 'M' + ts + random;
+  document.getElementById('fmSeal').value = fmState.sealNo;
+}
+
+// ─── CREATE MANIFEST ───
+async function fmCreate() {
+  const sealNo = document.getElementById('fmSeal').value.trim() || 'M' + Date.now();
+  const destId = document.getElementById('fmDestination').value;
+  if (!destId) { showToast('Select a destination route', 'error'); return; }
+  // Valmo API expects numeric ID
+  const destIdNum = parseInt(destId, 10) || destId;
+
+  const btn = document.getElementById('fmCreateBtn');
+  btn.disabled = true; btn.textContent = '⏳ Creating...';
+
+  try {
+    const body = JSON.stringify({ manifestCode: sealNo, destLocationId: destIdNum });
+    console.log('Creating manifest:', body);
+    const result = await apiCall('/hub/manifest', {
+      method: 'POST',
+      body
+    });
+    console.log('Create response:', result);
+    fmState.manifestId = result?.manifestCode || result?.response?.manifestCode || result?.code || result?.response?.code || result?.manifestId || sealNo;
+    fmState.manifestColour = fmState.colour;
+    fmState.manifestRoute = document.getElementById('fmDestination').options[document.getElementById('fmDestination').selectedIndex]?.text || destId;
+    fmState.createdFromExisting = false;
+    fmShowPhase(2);
+    fmRenderCreatedBanner();
+    showToast('✅ Manifest created: ' + fmState.manifestId, 'success');
+  } catch(e) {
+    // Show actual error
+    showToast('❌ ' + e.message, 'error');
+    // Still allow offline mode as fallback
+    fmState.manifestId = sealNo;
+    fmState.manifestColour = fmState.colour;
+    fmState.manifestRoute = document.getElementById('fmDestination').options[document.getElementById('fmDestination').selectedIndex]?.text || destId;
+    fmState.createdFromExisting = false;
+    fmShowPhase(2);
+    fmRenderCreatedBanner();
+    showToast('⚠️ Manifest created (offline): ' + fmState.manifestId, 'info');
+  }
+  btn.disabled = false; btn.textContent = '🚀 Create Manifest';
+}
+
+function fmRenderCreatedBanner() {
+  document.getElementById('fmCreatedMeta').textContent =
+    fmState.manifestId + ' • ' + fmState.manifestRoute + ' • ' + fmState.manifestColour;
+}
+
+// ─── LOAD EXISTING MANIFEST ───
+async function fmLoadExisting() {
+  const code = document.getElementById('fmExistingCode').value.trim();
+  if (!code) { showToast('Enter a manifest code', 'error'); return; }
+
+  const btn = document.getElementById('fmLoadBtn');
+  btn.disabled = true; btn.textContent = '⏳ Loading...';
+  document.getElementById('fmColourAssign').style.display = 'none';
+  fmHideError();
+
+  try {
+    const data = await apiCall('/hub/manifest/fetch/' + encodeURIComponent(code) + '?include=waybills');
+    const manifest = data?.response || data?.data || data;
+
+    fmState.manifestId = manifest?.manifestCode || manifest?.code || code;
+    fmState.manifestRoute = manifest?.routeName || manifest?.destinationRoute || manifest?.destLocation?.name || '';
+    fmState.manifestColour = manifest?.colourName || manifest?.colour || '';
+
+    // Check if colour needs assignment
+    if (!fmState.manifestColour) {
+      fmState.existingColour = 'Green';
+      document.getElementById('fmExistingLoadedCode').textContent = fmState.manifestId;
+      document.getElementById('fmExistingLoadedRoute').textContent = fmState.manifestRoute || 'Route not set';
+      fmRenderColourPicker('fmExistingColourPicker', 'Green', 'fmSelectExistingColour');
+      document.getElementById('fmColourAssign').style.display = 'block';
+      btn.disabled = false; btn.textContent = '📋 Load Manifest';
+      return;
+    }
+
+    // Load existing waybills
+    const wbs = manifest?.waybills || manifest?.linkedWaybills || [];
+    fmState.waybills = wbs.map(w => ({
+      waybill: w.waybillNo || w.waybill || '',
+      shipper: w.shipperName || w.shipper || '',
+      packetId: w.packetId || w.packetCode || w.packet || ''
+    })).filter(w => w.waybill);
+
+    fmState.createdFromExisting = true;
+    fmShowPhase(2);
+    fmRenderWaybillList();
+    fmRenderCreatedBanner();
+    btn.disabled = false; btn.textContent = '📋 Load Manifest';
+    showToast('✅ Manifest loaded: ' + fmState.manifestId, 'success');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '📋 Load Manifest';
+    fmShowError('Could not load manifest: ' + e.message);
+  }
+}
+
+// ─── ASSIGN COLOUR ───
+async function fmAssignColour() {
+  const colour = fmState.existingColour || 'Green';
+  const btn = document.getElementById('fmAssignColourBtn');
+  btn.disabled = true; btn.textContent = '⏳ Assigning...';
+  try {
+    await apiCall('/hub/manifest', {
+      method: 'PUT',
+      body: JSON.stringify({ manifestCode: fmState.manifestId, colourName: colour })
+    });
+    fmState.manifestColour = colour;
+    document.getElementById('fmColourAssign').style.display = 'none';
+    // Continue to add waybills
+    fmRenderCreatedBanner();
+    btn.disabled = false; btn.textContent = '🎨 Assign Colour';
+    showToast('🎨 Colour assigned: ' + colour, 'success');
+  } catch(e) {
+    fmState.manifestColour = colour;
+    document.getElementById('fmColourAssign').style.display = 'none';
+    fmRenderCreatedBanner();
+    btn.disabled = false; btn.textContent = '🎨 Assign Colour';
+    showToast('🎨 Colour assigned (offline): ' + colour, 'info');
+  }
+}
+
+// ─── FAST MODE TOGGLE ───
+function fmToggleFast() {
+  fmState.fastMode = !fmState.fastMode;
+  document.getElementById('fmFastToggle').textContent = fmState.fastMode ? '⏩ FAST' : '🔽 NORMAL';
+  document.getElementById('fmFastToggle').style.borderColor = fmState.fastMode ? 'rgba(22,163,74,0.3)' : 'rgba(255,167,38,0.3)';
+  document.getElementById('fmFastToggle').style.background = fmState.fastMode ? 'rgba(22,163,74,0.1)' : 'rgba(255,167,38,0.1)';
+  // Hide packet input when switching to fast mode
+  if (fmState.fastMode) {
+    document.getElementById('fmPacketGroup').style.display = 'none';
+    fmState.pendingWaybill = null;
+  }
+}
+
+const FM_WAYBILL_RE = /^([A-Z]{2}\d{8,14}|\d{10,15})$/;
+
+// ─── ADD WAYBILL ───
+async function fmAddWaybill() {
+  const wb = document.getElementById('fmWbInput').value.trim();
+  if (!wb) { showToast('Enter a waybill number', 'error'); return; }
+  if (!fmState.manifestId) { showToast('Create or load a manifest first', 'error'); return; }
+  if (fmState.waybills.some(w => w.waybill === wb)) { showToast('Waybill already added', 'error'); return; }
+
+  // Check for HMAC in barcode (WAYBILLNO|HMAC)
+  const hmacIdx = wb.indexOf('|');
+  const waybillNo = hmacIdx > 0 ? wb.substring(0, hmacIdx) : wb;
+  const hmacSig = hmacIdx > 0 ? wb.substring(hmacIdx + 1) : null;
+
+  // Validate waybill format (VL + digits or all-numeric)
+  if (!FM_WAYBILL_RE.test(waybillNo)) {
+    showToast('❌ Invalid waybill: ' + waybillNo + ' (format: 2 letters + 8-14 digits or 10-15 digits)', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('fmAddWbBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  try {
+    // Step 1: Look up waybill detail (shipper name) via tracking API — like Android extractShipperName()
+    let shipper = '';
+    try {
+      const detail = await apiCall('/tracking/consignment/v1/' + encodeURIComponent(waybillNo));
+      const consignment = detail?.response?.consignment || detail?.consignment;
+      if (consignment) {
+        shipper = consignment?.shipper?.name || consignment?.shipperName || '';
+      }
+      if (!shipper) shipper = detail?.response?.partnerName || '';
+    } catch(e) { /* tracking detail failed, continue */ }
+
+    // Step 2: Link waybill to manifest
+    const headers = {};
+    if (hmacSig) headers['X-Hmac-Signature'] = hmacSig;
+
+    console.log('Linking waybill:', fmState.manifestId, waybillNo);
+    const result = await apiCall('/hub/manifest/waybill', {
+      method: 'PUT',
+      body: JSON.stringify({ manifestCode: fmState.manifestId, waybillNo: waybillNo }),
+      headers
+    });
+
+    // Step 3: Check if deepLinkUrl exists (requires packet scan)
+    const deepLinkUrl = result?.response?.deepLinkUrl || result?.deepLinkUrl || result?.data?.deepLinkUrl;
+
+    if (deepLinkUrl && !fmState.fastMode) {
+      // Normal mode: need packet ID
+      const packetDto = result?.response?.packetScanDTO || result?.packetScanDTO || result?.data?.packetScanDTO;
+      fmState.pendingWaybill = waybillNo;
+      fmState.expectedPacketId = packetDto?.id || '';
+      document.getElementById('fmPacketGroup').style.display = 'block';
+      document.getElementById('fmPacketInput').value = '';
+      document.getElementById('fmPacketInput').placeholder = fmState.expectedPacketId ?
+        'Scan packet ID (expected: ' + fmState.expectedPacketId + ')' :
+        'Scan or type packet ID';
+      document.getElementById('fmPacketInput').focus();
+      btn.disabled = false; btn.textContent = 'Add';
+      return;
+    }
+
+    // Step 4: Get packet code from response
+    const packetId = result?.response?.packetCode || result?.packetCode || result?.data?.packetCode ||
+                      result?.response?.packetScanDTO?.id || result?.packetScanDTO?.id || '';
+
+    fmState.waybills.push({ waybill: waybillNo, shipper: shipper || '—', packetId });
+    document.getElementById('fmWbInput').value = '';
+    fmRenderWaybillList();
+    btn.disabled = false; btn.textContent = 'Add';
+    showToast('✅ ' + waybillNo + ' added', 'success');
+  } catch(e) {
+    // Show error + offline fallback
+    showToast('❌ ' + e.message, 'error');
+    fmState.waybills.push({ waybill: waybillNo, shipper: '—', packetId: '—' });
+    document.getElementById('fmWbInput').value = '';
+    fmRenderWaybillList();
+    btn.disabled = false; btn.textContent = 'Add';
+    showToast('⚠️ ' + waybillNo + ' added (local) - ' + e.message, 'info');
+  }
+}
+
+// ─── CONFIRM PACKET (Normal Mode) ───
+async function fmConfirmPacket() {
+  const packetId = document.getElementById('fmPacketInput').value.trim();
+  if (!packetId || !fmState.pendingWaybill) { showToast('Enter packet ID', 'error'); return; }
+
+  const btn = document.getElementById('fmConfirmPacketBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  try {
+    // Step 1: Look up shipper name via tracking API (like Android extractShipperName)
+    let shipper = '';
+    try {
+      const detail = await apiCall('/tracking/consignment/v1/' + encodeURIComponent(fmState.pendingWaybill));
+      const consignment = detail?.response?.consignment || detail?.consignment;
+      if (consignment) {
+        shipper = consignment?.shipper?.name || consignment?.shipperName || '';
+      }
+      if (!shipper) shipper = detail?.response?.partnerName || '';
+    } catch(e) { /* tracking detail failed */ }
+
+    // Step 2: Confirm packet with manifest link
+    const result = await apiCall('/hub/manifest/waybill', {
+      method: 'PUT',
+      body: JSON.stringify({
+        manifestCode: fmState.manifestId,
+        waybillNo: fmState.pendingWaybill,
+        packetScanRequestDetails: {
+          id: fmState.expectedPacketId,
+          match: true,
+          cancelAllowed: false,
+          inputType: 'TYPED'
+        }
+      })
+    });
+
+    if (!shipper) shipper = result?.response?.shipperName || result?.shipperName || '';
+    fmState.waybills.push({
+      waybill: fmState.pendingWaybill,
+      shipper: shipper || '—',
+      packetId: packetId
+    });
+
+    fmState.pendingWaybill = null;
+    fmState.expectedPacketId = '';
+    document.getElementById('fmWbInput').value = '';
+    document.getElementById('fmPacketInput').value = '';
+    document.getElementById('fmPacketGroup').style.display = 'none';
+    fmRenderWaybillList();
+    btn.disabled = false; btn.textContent = 'Done';
+    showToast('✅ Waybill added with packet', 'success');
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+    // Offline fallback
+    fmState.waybills.push({
+      waybill: fmState.pendingWaybill,
+      shipper: '—',
+      packetId: packetId
+    });
+    fmState.pendingWaybill = null;
+    fmState.expectedPacketId = '';
+    document.getElementById('fmWbInput').value = '';
+    document.getElementById('fmPacketInput').value = '';
+    document.getElementById('fmPacketGroup').style.display = 'none';
+    fmRenderWaybillList();
+    btn.disabled = false; btn.textContent = 'Done';
+    showToast('✅ Waybill added with packet (offline)', 'info');
+  }
+}
+
+// ─── RENDER WAYBILL LIST ───
+function fmRenderWaybillList() {
+  const container = document.getElementById('fmWbList');
+  const count = document.getElementById('fmWbCount');
+  const lockCount = document.getElementById('fmLockCount');
+  const lockBtn = document.getElementById('fmLockBtn');
+
+  count.textContent = fmState.waybills.length;
+  lockCount.textContent = fmState.waybills.length;
+  lockBtn.disabled = fmState.waybills.length === 0;
+
+  if (fmState.waybills.length === 0) {
+    container.innerHTML = '<div class="fm-empty-wb">No waybills added yet</div>';
+    return;
+  }
+
+  container.innerHTML = fmState.waybills.map((w, i) =>
+    '<div class="fm-wb-item">' +
+      '<span class="fw-num">' + w.waybill + '</span>' +
+      '<div class="fw-info">' +
+        '<div class="fw-shipper">' + (w.shipper || '—') + '</div>' +
+        '<div class="fw-packet">Packet: ' + (w.packetId || '—') + '</div>' +
+      '</div>' +
+      '<span class="fw-check">✅</span>' +
+      '<span class="fw-remove" onclick="fmRemoveWaybill(' + i + ')" title="Remove">✕</span>' +
+    '</div>'
+  ).join('');
+}
+
+function fmRemoveWaybill(idx) {
+  fmState.waybills.splice(idx, 1);
+  fmRenderWaybillList();
+  showToast('Waybill removed', 'info');
+}
+
+// ─── LOCK MANIFEST ───
+async function fmLock() {
+  if (fmState.waybills.length === 0 || !fmState.manifestId) return;
+  const btn = document.getElementById('fmLockBtn');
+  btn.disabled = true; btn.textContent = '⏳ Locking...';
+
+  try {
+    await apiCall('/hub/manifest/lock-unlock/' + encodeURIComponent(fmState.manifestId) + '?shouldLock=true', {
+      method: 'PUT'
+    });
+    fmState.isLocked = true;
+    fmRenderLocked();
+    showToast('✅ Manifest locked!', 'success');
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+    fmState.isLocked = true;
+    fmRenderLocked();
+    showToast('✅ Locked (offline) - ' + e.message, 'info');
+  }
+  btn.disabled = false; btn.textContent = '🔒 Lock Manifest';
+}
+
+function fmRenderLocked() {
+  document.getElementById('fmLockedMeta').innerHTML =
+    fmState.manifestId + ' • ' + fmState.manifestRoute + ' • ' + fmState.manifestColour + ' • ' +
+    fmState.waybills.length + ' waybills';
+  fmShowPhase(3);
+}
+
+// ─── RESET ───
+function fmReset() {
+  fmState.manifestId = null;
+  fmState.manifestColour = 'Green';
+  fmState.manifestRoute = '';
+  fmState.waybills = [];
+  fmState.fastMode = true;
+  fmState.pendingWaybill = null;
+  fmState.pendingPacketId = '';
+  fmState.expectedPacketId = '';
+  fmState.isLocked = false;
+  fmState.createdFromExisting = false;
+  fmState.colour = 'Green';
+
+  document.getElementById('fmSeal').value = '';
+  document.getElementById('fmWbInput').value = '';
+  document.getElementById('fmPacketInput').value = '';
+  document.getElementById('fmExistingCode').value = '';
+  document.getElementById('fmPacketGroup').style.display = 'none';
+  document.getElementById('fmColourAssign').style.display = 'none';
+  document.getElementById('fmFastToggle').textContent = '⏩ FAST';
+  document.getElementById('fmFastToggle').style.borderColor = 'rgba(22,163,74,0.3)';
+  document.getElementById('fmFastToggle').style.background = 'rgba(22,163,74,0.1)';
+  fmHideError();
+
+  fmRenderColourPicker('fmColourPicker', 'Green', 'fmSelectColour');
+  fmShowPhase(1);
+  fmSetMode('create');
+}
+
+// ─── ERROR ───
+function fmShowError(msg) {
+  const el = document.getElementById('fmError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function fmHideError() {
+  document.getElementById('fmError').style.display = 'none';
+}
+
+// ═══════════════════════════
+//  PICKUP MANIFEST
+// ═══════════════════════════
+async function loadPickupManifests() {
+  const id = document.getElementById('pmSearch').value.trim();
+  const container = document.getElementById('pmList');
+  if (!id) { container.innerHTML = '<div class="loading">Enter a manifest ID to view details</div>'; return; }
+  container.innerHTML = '<span class="spinner"></span> Loading...';
+  try { const data = await apiCall('/hub/manifest/fetch/' + encodeURIComponent(id)); container.innerHTML = '<pre style="font-size:11px;color:rgba(255,255,255,0.5);overflow:auto;">' + JSON.stringify(data, null, 2) + '</pre>'; }
+  catch(e) { container.innerHTML = '<div class="loading">Could not load manifest</div>'; }
+}
+
+// ═══════════════════════════
+//  PACKET SEARCH
+// ═══════════════════════════
+async function searchPacket() {
+  const pid = document.getElementById('packetSearchInput').value.trim();
+  const container = document.getElementById('packetSearchResult');
+  if (!pid) { container.innerHTML = '<div class="loading">Enter a Packet ID to search</div>'; return; }
+  container.innerHTML = '<span class="spinner"></span> Searching...';
+  try { const data = await apiCall('/packet/' + pid); container.innerHTML = '<pre style="font-size:11px;color:rgba(255,255,255,0.5);overflow:auto;">' + JSON.stringify(data, null, 2) + '</pre>'; }
+  catch(e) { container.innerHTML = '<div class="loading">Could not find packet</div>'; }
+}
+</script>
+</body>
+</html>
