@@ -650,22 +650,23 @@ const FM_COLOUR_HEX = { Red:'#EF5350', Blue:'#42A5F5', Green:'#4CAF50', Yellow:'
   fmLoadDestinations();
 
   // Auto-test: ?auto=1 — wait for destinations then auto-create
-  setTimeout(function() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('auto') === '1') {
+  (function autoTest() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('auto') !== '1') return;
+    var dest = params.get('dest') || 'S11S';
+    var interval = setInterval(function() {
       var sel = document.getElementById('fmDestination');
-      if (!sel || sel.options.length < 2) { /* retry once */ return; }
-      var dest = params.get('dest') || 'S11S';
-      var destId = dest;
+      if (!sel || sel.options.length < 2 || sel.disabled) return;
+      clearInterval(interval);
       navigate('forward-manifest');
       setTimeout(function() {
-        document.getElementById('fmDestination').value = destId;
+        document.getElementById('fmDestination').value = dest;
         document.getElementById('fmDestination').dispatchEvent(new Event('change'));
         fmSelectColour('Red');
         setTimeout(function() { fmCreate(); }, 300);
       }, 500);
-    }
-  }, 1500);
+    }, 500);
+  })();
 })();
 
 function showToast(msg, type) {
