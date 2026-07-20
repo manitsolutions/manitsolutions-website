@@ -709,6 +709,21 @@ function showToast(msg, type) {
   setTimeout(() => { t.style.display = 'none'; }, 4000);
 }
 
+// Extract human-readable reason from Valmo API error messages
+function valmoReason(msg) {
+  if (!msg || !msg.startsWith('API error')) return msg;
+  // Format: "API error 419: {"errorCode":"E710","errors":"Real reason here"}"
+  var colonIdx = msg.indexOf(':');
+  if (colonIdx < 0) return msg;
+  var jsonStr = msg.substring(colonIdx + 1).trim();
+  try {
+    var parsed = JSON.parse(jsonStr);
+    return parsed.errors || parsed.error || parsed.message || msg;
+  } catch(e) {
+    return msg;
+  }
+}
+
 // ─── Navigation ───
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -994,8 +1009,7 @@ async function fmCreate() {
     fmRenderCreatedBanner();
     showToast('✅ Manifest created: ' + fmState.manifestId, 'success');
   } catch(e) {
-    // Show actual error
-    showToast('❌ ' + e.message, 'error');
+    showToast('❌ ' + valmoReason(e.message), 'error');
     // Still allow offline mode as fallback
     fmState.manifestId = sealNo;
     fmState.manifestColour = fmState.colour;
@@ -1177,7 +1191,7 @@ async function fmAddWaybill() {
     btn.disabled = false; btn.textContent = 'Add';
     // Distinguish: API errors (Valmo rejected) vs network errors (offline)
     if (e.message && e.message.startsWith('API error')) {
-      showToast('❌ ' + e.message, 'error');
+      showToast('❌ ' + valmoReason(e.message), 'error');
     } else {
       // Network/offline error — add locally as fallback
       fmState.waybills.push({ waybill: waybillNo, shipper: '—', packetId: '—' });
@@ -1239,7 +1253,7 @@ async function fmConfirmPacket() {
     btn.disabled = false; btn.textContent = 'Done';
     showToast('✅ Waybill added with packet', 'success');
   } catch(e) {
-    showToast('❌ ' + e.message, 'error');
+    showToast('❌ ' + valmoReason(e.message), 'error');
     // Offline fallback
     fmState.waybills.push({
       waybill: fmState.pendingWaybill,
@@ -1307,7 +1321,7 @@ async function fmLock() {
     showToast('✅ Manifest locked!', 'success');
   } catch(e) {
     if (e.message && e.message.startsWith('API error')) {
-      showToast('❌ ' + e.message, 'error');
+      showToast('❌ ' + valmoReason(e.message), 'error');
     } else {
       fmState.isLocked = true;
       fmRenderLocked();
