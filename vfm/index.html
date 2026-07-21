@@ -1159,6 +1159,17 @@ async function fmAddWaybill() {
       body: JSON.stringify({ manifestCode: fmState.manifestId, waybillNo: waybillNo }),
       headers
     });
+    console.log('Link API response:', JSON.stringify(result));
+
+    // Valmo sometimes returns 200 with errorCode in body (e.g., E710)
+    if (result) {
+      var valmoErrCode = result.errorCode || result.response?.errorCode;
+      var valmoStatus = result.response?.status?.code;
+      if (valmoErrCode || (valmoStatus && valmoStatus !== 200)) {
+        var valmoErr = result.errors || result.error || result.response?.errors || result.response?.error || JSON.stringify(result);
+        throw new Error('Valmo: ' + valmoErr);
+      }
+    }
 
     // Step 3: Check if deepLinkUrl exists (requires packet scan)
     const deepLinkUrl = result?.response?.deepLinkUrl || result?.deepLinkUrl || result?.data?.deepLinkUrl;
